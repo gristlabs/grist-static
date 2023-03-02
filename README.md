@@ -24,4 +24,7 @@ on the create-a-new-document button should get you into
 a working empty document. The SQLite part ony exists in
 a transient state in your browser. It is still hooked up
 to a backend though for the data engine (spreadsheet-style
-updates).
+updates). The backend uses pyodide but under node.
+Just need to collapse these pieces together and cut out
+all the unnecessary plumbing between them :-)
+
