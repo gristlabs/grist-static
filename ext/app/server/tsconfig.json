@@ -1,0 +1,16 @@
+{
+  "extends": "../../../buildtools/tsconfig-base-ext.json",
+  "include": [
+    "**/*",
+    "../../../app/server/**/*",
+    "../../../app/gen-server/**/*",
+    "../../../core/app/server/**/*",
+    "../../../core/app/gen-server/**/*",
+    "../../../stubs/app/server/declarations.d.ts",
+    "../../../stubs/app/server/server.ts",
+    "../../../stubs/app/server/logins.ts"
+  ],
+  "references": [
+    { "path": "../../../app/common" },
+  ]
+}

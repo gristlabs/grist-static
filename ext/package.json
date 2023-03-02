@@ -1,8 +1,10 @@
 {
   "dependencies": {
-    "better-sqlite3": "8.1.0"
+    "better-sqlite3": "8.1.0",
+    "sql.js": "^1.8.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "7.6.3"
+    "@types/better-sqlite3": "7.6.3",
+    "@types/sql.js": "^1.4.4"
   }
 }
