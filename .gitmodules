@@ -1,3 +1,4 @@
 [submodule "core"]
 	path = core
 	url = git@github.com:paulfitz/grist-core
+	ignore = untracked
