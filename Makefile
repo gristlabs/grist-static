@@ -13,9 +13,10 @@ requirements:
 
 update-lock:
 	cd ext && yarn install --modules-folder=../node_modules --verbose
+	cd core && yarn install
 
 build:
 	cd core && yarn run build:prod
 
 start:
-	cd core && GRIST_SESSION_SECRET=something GRIST_SANDBOX_FLAVOR=pyodide yarn start
+	cd core && GRIST_SESSION_SECRET=something GRIST_SANDBOX_FLAVOR=pyodideInline yarn start

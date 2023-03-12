@@ -1,7 +1,11 @@
 {
   "dependencies": {
     "better-sqlite3": "8.1.0",
-    "sql.js": "^1.8.0"
+    "crypto-browserify": "^3.12.0",
+    "pyodide": "0.22.1",
+    "sql.js": "^1.8.0",
+    "stream-browserify": "^3.0.0",
+    "web-worker": "1.2.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "7.6.3",

@@ -21,8 +21,11 @@ export class SqliteJsVariant implements SqliteVariant {
 async function getSql() {
   return initSqlJs({
     locateFile: file => {
-      console.log("locateFile", {file});
-      return `/home/paulfitz/cvs/grist-static/node_modules/sql.js/dist/${file}`;
+      console.log("locateFile in", {file});
+      const target = `static/sql.js/dist/${file}`;
+      console.log("locateFile out! - this doesn't work as far as i can see", {target});
+      return target;
+      //return `/home/paulfitz/cvs/grist-static/node_modules/sql.js/dist/${file}`;
     }
   });
 }
