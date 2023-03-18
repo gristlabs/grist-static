@@ -1,5 +1,6 @@
 default:
 	@echo "To make and run Grist:"
+	@echo "  git submodule update --init"
 	@echo "  make requirements"
 	@echo "  make build"
 	@echo "  make start"
@@ -20,3 +21,10 @@ build:
 
 start:
 	cd core && GRIST_SESSION_SECRET=something GRIST_SANDBOX_FLAVOR=pyodideInline yarn start
+
+serve:
+	@echo "========================================="
+	@echo "See http://localhost:3030/page/index.html"
+	@echo "========================================="
+	./buildtools/link_page_resources
+	python -m http.server 3030
