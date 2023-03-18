@@ -1,3 +1,7 @@
+/***
+ * This is web worker code for running the Grist data engine.
+ */
+
 class Pyodide {
   async start(sender, receiver) {
     if (typeof importScripts === 'function') {

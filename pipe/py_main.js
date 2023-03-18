@@ -1,3 +1,8 @@
+/***
+ * This was test code for talking to starting and talking to
+ * the Grist data engine. Not used.
+ */
+
 class OutsideWorkerWithBlockingStream {
   
   async start(fname, bufferLen) {
