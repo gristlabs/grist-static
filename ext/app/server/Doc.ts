@@ -21,6 +21,7 @@ class FakeDocStorageManager {
   scheduleUsageUpdate() {}
   prepareToCreateDoc() {}
   closeDocument() {}
+  prepareLocalDoc() {}
 }
 
 export function get42() {

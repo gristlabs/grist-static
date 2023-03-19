@@ -81,9 +81,11 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     this.dm = new gristy.DocManager(dsm as any, null, null, gs as any);
     this.ad = new gristy.ActiveDoc(this.dm, 'meep');
     //await this.ad.createEmptyDoc({});
+    const hasSeed = (window as any).seedFile;
     await this.ad.loadDoc({mode: 'system'}, {
-      forceNew: true,
-      skipInitialTable: false,
+      forceNew: !hasSeed,
+      skipInitialTable: hasSeed,
+      useExisting: true,
     });
     this.ad.addClient({
       addDocSession: () => {

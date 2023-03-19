@@ -37,28 +37,49 @@ export class JsDatabase implements MinDB {
   constructor(path: string, mode: any, cb: (err: any, v?: any) => void) {
     this.db = new Promise<SqlJs.Database>((resolve, reject) => {
       console.log("DB", path, mode);
-      sql.then(sql => {
-        console.log("working with", sql);
-        const db = new sql.Database();
+      sql.then(async sql => {
+        try {
+          console.log("working with.....", sql);
+          const seedFile = path !== ':memory:' ? (window as any).seedFile : '';
+          console.log("Have a seed file?", {seedFile});
+          let seed: Uint8Array|undefined;
+          if (seedFile) {
+            console.log("Have a seed file", {seedFile});
+            const resp = await window.fetch(seedFile);
+            console.log("seed file result", resp.status, resp.statusText);
+            if (!resp.ok) {
+              throw new Error(seedFile + ": " + resp.statusText);
+            }
+            const data = await resp.arrayBuffer();
+            const arr = new Uint8Array(data);
+            console.log("Got seed file data", {arr});
+            seed = arr;
+          }
+
+          //console.log("working with", sql);
+          const db = new sql.Database(seed);
         //const step = (array: any) => {
         //console.log("CALLED STEP");
         //return array;
       //};
         //Object.defineProperty(step, 'length', { value: 0 });
         //console.log("length?", step.length);
-        (db as any).create_aggregate('grist_marshal', {
-          init: gristMarshal.initialize,
-          //step,
-          step: {
-            length: 0,
-            apply: (_: any, args: any[]) => {
-              console.log("CALLED APPLY", {_, args});
-              return gristMarshal.step(args[0], ...args.slice(1));
+          (db as any).create_aggregate('grist_marshal', {
+            init: gristMarshal.initialize,
+            //step,
+            step: {
+              length: 0,
+              apply: (_: any, args: any[]) => {
+                console.log("CALLED APPLY", {_, args});
+                return gristMarshal.step(args[0], ...args.slice(1));
+              },
             },
-          },
-          finalize: gristMarshal.finalize,
-        });
-        resolve(db);
+            finalize: gristMarshal.finalize,
+          });
+          resolve(db);
+        } catch (e) {
+          reject(e);
+        }
       }).catch(e => {
         console.error(e);
         reject(e);

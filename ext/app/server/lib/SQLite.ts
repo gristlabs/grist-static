@@ -23,9 +23,24 @@ export class Database {
   constructor(path: string, mode: any, cb: (err: any, v?: any) => void) {
     this.db = new Promise<SqlJs.Database>((resolve, reject) => {
       console.log("DB", path, mode);
-      sql.then(sql => {
-        console.log("working with", sql);
-        resolve(new sql.Database());
+      sql.then(async sql => {
+        try {
+          console.log("working with.....", sql);
+          const seedFile = (window as any).seedFile;
+          console.log("Have a seed file?", {seedFile});
+          if (seedFile) {
+            console.log("Have a seed file", {seedFile});
+            const resp = await window.fetch(seedFile);
+            const data = await resp.arrayBuffer();
+            const arr = new Uint8Array(data);
+            console.log("Got seed file data", {arr});
+            resolve(new sql.Database(arr));
+          } else {
+            resolve(new sql.Database());
+          }
+        } catch (e) {
+          reject(e);
+        }
       }).catch(e => {
         console.error(e);
         reject(e);
