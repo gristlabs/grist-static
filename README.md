@@ -13,7 +13,10 @@ like a neat way to persist results (once it has broad browser support).
 ## See an example
 
 https://paulfitz.github.io/scrapyard/grist-static-take2/index.html
-is a Grist document with some investment data and analysis.
+is a Grist document with some investment data and analysis,
+hosted on GitHub Pages:
+
+https://user-images.githubusercontent.com/118367/226204523-82ef98b3-5543-4907-9ce2-3c4fba79fd83.mp4
 
 For neatness, I stored as many assets as I could on a CDN.
 You can use this repository to collect them all to place where
