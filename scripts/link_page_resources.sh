@@ -51,8 +51,8 @@ cd ..
 rm -rf pipe
 mkdir -p pipe
 cd pipe
-transfer ./ ../../../pipe/py.js py.js
-transfer ./ ../../../pipe/py_main.js py_main.js
+transfer ./ ../../../ext/app/pipe/py.js py.js
+transfer ./ ../../../ext/app/pipe/py_main.js py_main.js
 transfer ./ ../../../node_modules/pyodide pyodide
 transfer ../../../core/app/server/ ../../sandbox/pyodide/_build/packages packages
 cd ..

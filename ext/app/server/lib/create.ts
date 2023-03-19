@@ -8,6 +8,8 @@ import { SandboxProcess } from 'app/server/lib/NSandbox';
 
 import { Mutex } from 'async-mutex';
 
+import pipeCode from 'app/pipe/py.js';
+
 class OutsideWorkerWithBlockingStream {
   private worker: any;
   private Worker: any;
@@ -22,11 +24,13 @@ class OutsideWorkerWithBlockingStream {
   private readingCb: any;
   private reading: any;
   private pinging: any;
+  private prefix: string;
   private mutex = new Mutex();
   
-  async start(fname: string|URL, bufferLen: number, readCb: any = null) {
+  async start(fname: string|URL, prefix: string, bufferLen: number, readCb: any = null) {
     this._getWorkerApi();
     this.worker = new this.Worker(fname);
+    this.prefix = prefix;
     this._prepRead();
     this._prepPing();
 
@@ -56,6 +60,7 @@ class OutsideWorkerWithBlockingStream {
     this.worker.postMessage({
       type: 'buffer',
       buffer: this.buffer,
+      prefix: this.prefix,
     });
     console.log('Waiting to hear from worker...');
     await this._waitPing();
@@ -210,12 +215,16 @@ function pyodideInlineSpawner(): SandboxProcess {
       }).catch(e => console.error(e));
     },
     getData: (cb) => {
-      console.log('asked to get data');
+      console.log('asked to get data...');
       const worker = new OutsideWorkerWithBlockingStream();
-      const url = 'pipe/py.js';
-      //const url = new URL('py.js', 'file:///home/paulfitz/cvs/grist-static/pipe/zing');
-      console.log("URL", url);
-      worker.start(url, 65536, cb).then(() => {
+      // Start worker with a data url since cross origin is a bear in
+      // this case.
+      const base = document.querySelector('base');
+      const prefix = new URL((base?.href || window.location.href) + 'pipe/');
+      const selfContained = prefix.hostname === window.location.hostname;
+      console.log("self contained?", {selfContained});
+      const url = selfContained ? 'pipe/py.js' : new URL(pipeCode as any);
+      worker.start(url, selfContained ? '' : prefix.href, 65536, cb).then(() => {
         setWorker(worker);
       }).catch(e => console.error(e));
     },

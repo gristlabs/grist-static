@@ -56,6 +56,10 @@ base.output = {
   libraryExport: 'default',
 };
 
+base.module.rules.unshift({
+  test: /py\.js$/,
+  type: 'asset'
+});
 
 module.exports = base;
 

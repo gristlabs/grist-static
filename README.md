@@ -17,7 +17,8 @@ python -m http.server 3030
 Or visit https://paulfitz.github.io/scrapyard/grist-static/
 
 The sequence above places a lot of links in the `page`
-directory. To collect files for uploading, use:
+directory, for convenience during development. To collect
+files for uploading, use instead:
 
 ```
 ./scripts/link_page_resources.sh copy

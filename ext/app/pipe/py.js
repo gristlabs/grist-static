@@ -3,9 +3,10 @@
  */
 
 class Pyodide {
-  async start(sender, receiver) {
+  async start(prefix, sender, receiver) {
+    this.prefix = prefix;
     if (typeof importScripts === 'function') {
-      importScripts('pyodide/pyodide.js');
+      importScripts(this.prefix + 'pyodide/pyodide.js');
       this.myLoadPyodide = loadPyodide;
     } else {
       const pyo = require('pyodide/pyodide.js');
@@ -76,8 +77,7 @@ sys.version
       "packages/grist-1.0-py3-none-any.whl"
     ];
     await this.pyodide.loadPackage(
-      // lst.map(l => "/home/paulfitz/cvs/grist-static/pipe/" + l)
-      lst.map(l => "" + l)
+      lst.map(l => this.prefix + l)
     );
     console.log("loaded", {lst});    
   }
@@ -108,10 +108,12 @@ class InsideWorkerWithBlockingStream {
   async start() {
     this._getWorkerApi();
     this.buffer = null;
+    this.prefix = null;
     return new Promise((resolve) => {
       this.addEventListener('message', e => {
         if (e.data.buffer) {
           this.buffer = e.data.buffer;
+          this.prefix = e.data.prefix;
           this.key = new Int32Array(this.buffer, 0, 4);
           this.len = new Int32Array(this.buffer, 4, 4);
           this.tlen = new Int32Array(this.buffer, 8, 4);
@@ -120,6 +122,7 @@ class InsideWorkerWithBlockingStream {
         }
         if (this.buffer) {
           console.log('worker received buffer - acknowledging');
+          console.log('also got prefix', {prefix: this.prefix});
           this.postMessage({type: 'ping'});
           resolve();
         }
@@ -209,7 +212,7 @@ async function main() {
   }
   */
   
-  await pyodide.start(sender, receiver);
+  await pyodide.start(worker.prefix, sender, receiver);
   await pyodide.loadPackages();
   pyodide.check();
   try {

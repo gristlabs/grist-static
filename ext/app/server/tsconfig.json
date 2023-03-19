@@ -8,7 +8,8 @@
     "../../../core/app/gen-server/**/*",
     "../../../stubs/app/server/declarations.d.ts",
     "../../../stubs/app/server/server.ts",
-    "../../../stubs/app/server/logins.ts"
+    "../../../stubs/app/server/logins.ts",
+    "../pipe/py.js",
   ],
   "references": [
     { "path": "../../../app/common" },
