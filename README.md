@@ -46,7 +46,7 @@ files for uploading, use instead:
 
 This is an unofficial personal experiment, not a Grist Labs product.
 It is still rough and hacky. Pieces that don't work "naturally"
-(e.g. imports, exports, custom widgets) aren't disabled, they
+(e.g. imports, exports, snapshots, custom widgets) aren't disabled, they
 just ... won't do anything.
 
 I don't have any particular roadmap in mind, just enjoying making
