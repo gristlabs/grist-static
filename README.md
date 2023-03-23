@@ -49,11 +49,18 @@ It is still rough and hacky. Pieces that don't work "naturally"
 (e.g. imports, exports, snapshots, custom widgets) aren't disabled, they
 just ... won't do anything.
 
-I don't have any particular roadmap in mind, just enjoying making
-Grist work in all the places. I do want to clean up the code in this
-repo, now that I've make a POC know what I'm doing.
-
 For many purposes [Grist embedding](https://support.getgrist.com/embedding/)
 may be what you want. That will let you embed a Grist document
 from a Grist installation (such as the hosted service offered by
 Grist Labs) onto another website.
+
+All that said, here is what I'm thinking:
+
+ * [X] Get something that works on a webserver without special COOP/COEP headers.
+ * [ ] Get a few small tweaks to enable plugging in alternate storage and build steps landed upstream in `grist-core`.
+ * [ ] Whittle down the code and clean up the demo now I know what I'm doing.
+ * [ ] Hide parts of UI that don't make sense in this context.
+ * [ ] Consider switching to SQLite developers' version of sqlite.js, which has good local storage support.
+ * [ ] Enable at least one export option (Download *.grist seems easiest).
+ * [ ] Enable at least one import option.
+ 
