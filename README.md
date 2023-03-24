@@ -63,6 +63,18 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
   * I've been pushing Grist code to https://grist-static.com/ as a CDN; you can produce it all yourself using this repo.
   * After that, it is just a case of putting a `.grist` file on your server beside this `.html` file, and filing in the options to `bootstrapGrist`.
 
+## Tips for small .grist files
+
+Grist spreadsheets by default store a lot of history in the `.grist` file.
+You can prune that history by building `grist-core` and then, in the
+`grist-core` directory, doing:
+
+```
+yarn run cli history prune PATH/TO/YOUR/doc.grist
+```
+
+Sorry this is awkward.
+
 ## Building from source
 
 ```
@@ -94,6 +106,7 @@ I am interested in making user changes persist in their browser -
 may be a good option for that, once it has broad browser support.
 
  * [X] Get something that works on a webserver without special COOP/COEP headers.
+
  * [ ] Start making versioned .zip releases of all needed assets.
  * [ ] Get a few small tweaks to enable plugging in alternate storage and build steps landed upstream in `grist-core`.
  * [ ] Whittle down the code and clean up the demo now I know what I'm doing.
@@ -101,4 +114,4 @@ may be a good option for that, once it has broad browser support.
  * [ ] Consider switching to SQLite developers' version of sqlite.js, which has good local storage support.
  * [ ] Enable at least one export option (Download *.grist seems easiest).
  * [ ] Enable at least one import option.
- 
+ * [ ] Give a better way of pruning *.grist files.
