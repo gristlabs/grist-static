@@ -13,15 +13,10 @@ millions of simultaneous users.
 
 ## See an example
 
-https://paulfitz.github.io/scrapyard/grist-static-take2/index.html
-is a Grist document with some investment data and analysis,
-hosted on GitHub Pages:
+https://paulfitz.github.io/grist-static shows a couple of
+example Grist documents hosted on GitHub Pages:
 
 https://user-images.githubusercontent.com/118367/226204523-82ef98b3-5543-4907-9ce2-3c4fba79fd83.mp4
-
-For neatness, I stored as many assets as I could on a CDN.
-You can use this repository to collect them all to place where
-you want.
 
 ## Make a local Proof Of Concept of Grist without a backend
 
@@ -57,6 +52,7 @@ Grist Labs) onto another website.
 All that said, here is what I'm thinking:
 
  * [X] Get something that works on a webserver without special COOP/COEP headers.
+ * [ ] Start making versioned .zip releases of all needed assets.
  * [ ] Get a few small tweaks to enable plugging in alternate storage and build steps landed upstream in `grist-core`.
  * [ ] Whittle down the code and clean up the demo now I know what I'm doing.
  * [ ] Hide parts of UI that don't make sense in this context.
