@@ -29,7 +29,7 @@ millions of simultaneous users.
 https://paulfitz.github.io/grist-static shows a couple of
 example Grist documents hosted on GitHub Pages:
 
-https://user-images.githubusercontent.com/118367/226204523-82ef98b3-5543-4907-9ce2-3c4fba79fd83.mp4
+https://user-images.githubusercontent.com/118367/227564527-82a9929c-40d3-4167-999f-6aeee4955723.mp4
 
 ## Serving a Grist document on a static website
 
