@@ -100,6 +100,9 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
             getLogMeta: () => {
               return { thing: 1 };
             },
+            getAltSessionId: () => {
+              return 'alt-session-id';
+            }
           },
           authorizer: {
             assertAccess: () => true,
@@ -250,7 +253,7 @@ const docInfo = {
   "trunkAccess": "owners"
 };
 
-function newFetch(target, opts) {
+function newFetch(target: string, opts: any) {
   const url = new URL(target);
   console.log("HEY", {target, opts, url});
   if (url.pathname.endsWith('/api/session/access/active')) {
