@@ -26,7 +26,7 @@ base.resolve.alias = {
   '@gristlabs/pidusage': 'app/server/lib/pidUsageStub',
   'child_process': 'app/server/lib/childProcessStub',
   'tmp': 'app/server/lib/tmpStub',
-  'app/client/components/Comm': 'app/server/lib/CommStub', 
+  'app/client/components/Comm': 'app/server/lib/CommStub',
 };
 
 base.resolve.fallback = {

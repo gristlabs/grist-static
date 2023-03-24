@@ -1,96 +1,20 @@
 <!doctype html>
 <html>
-<head>
-<meta charset="utf8">
+  <head>
+    <meta charset="utf8">
+    <script src="coi-serviceworker.js"></script>
+    <base href="static/" />
+    <script src="pipe/bootstrap.js"></script>
 
-<script src="coi-serviceworker.min.js"></script>
+    <title>100% browser-based Grist</title>
+  </head>
 
-<base href="static/" />
-<!--- base href="https://grist-static.com/experiments/e0003/" /--->
-
-<link rel="icon" type="image/x-icon" href="icons/favicon.png" crossorigin="anonymous" />
-
-<link rel="stylesheet" href="jqueryui/themes/smoothness/jquery-ui.css" crossorigin="anonymous">
-<link rel="stylesheet" href="bootstrap/dist/css/bootstrap.min.css" crossorigin="anonymous">
-<link rel="stylesheet" href="hljs.default.css" crossorigin="anonymous">
-<link rel="stylesheet" href="bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css" crossorigin="anonymous">
-<link rel="stylesheet" href="bundle.css" crossorigin="anonymous">
-<link rel="stylesheet" href="icons/icons.css" crossorigin="anonymous">
-<link rel="preload" href="locales/en.client.json" as="fetch" type="application/json" crossorigin>
-<link rel="preload" href="locales/en.server.json" as="fetch" type="application/json" crossorigin>
-<script>
-  const homeUrl = window.location.href.split('?')[0].replace('index.html', '');
-  // window.seedFile = homeUrl + 'investment-research.grist';
-  const fakeDocId = "new~2d6rcxHotohxAuTxttFRzU";
-  const fakeUrl = "https://example.com/o/docs/doc/new~2d6rcxHotohxAuTxttFRzU";
-  window.fakeUrl = fakeUrl;
-  window.fakeDocId = fakeDocId;
-  window.gristConfig = {"homeUrl":homeUrl,"org":"docs","baseDomain":null,"singleOrg":null,"helpCenterUrl":"https://support.getgrist.com","pathOnly":true,"supportAnon":false,"supportEngines":null,"hideUiElements":[],"pageTitleSuffix":null,"pluginUrl":"http://plugins.invalid","stripeAPIKey":null,"googleClientId":null,"googleDriveScope":null,"helpScoutBeaconId":null,"maxUploadSizeImport":null,"maxUploadSizeAttachment":null,"timestampMs":1678573297305,"enableWidgetRepository":false,"survey":false,"tagManagerId":null,"activation":{"isManager":false},"enableCustomCss":false,"supportedLngs":["de","en","es","fr","nb_NO","pt_BR"],"namespaces":["client","server"],"featureComments":false,"supportEmail":"support@getgrist.com","assignmentId":"new~2d6rcxHotohxAuTxttFRzU","getWorker":{"new~2d6rcxHotohxAuTxttFRzU":null},"getDoc":{"new~2d6rcxHotohxAuTxttFRzU":{"name":"Untitled","createdAt":"2023-03-11T22:21:37.298Z","updatedAt":"2023-03-11T22:21:37.298Z","id":"new~2d6rcxHotohxAuTxttFRzU","isPinned":false,"urlId":null,"workspace":{"name":"Home","createdAt":"2023-02-25T21:02:43.000Z","updatedAt":"2023-02-25T21:02:43.242Z","id":1,"isSupportWorkspace":false,"docs":[],"org":{"name":"Personal","createdAt":"2023-02-25T21:02:43.000Z","updatedAt":"2023-02-25T21:02:43.235Z","id":1,"domain":"docs-4","host":null,"owner":{"id":4,"name":"Support","picture":null,"ref":"dYWDbNhQWZ1WaXqpiqFfcN"}},"access":"owners"},"aliases":[],"access":"owners","trunkAccess":"owners"}},"plugins":[{"path":"/home/paulfitz/cvs/grist-static/core/plugins/core","id":"builtIn/core","manifest":{"name":"core","version":"0.0.0","description":"Grist core features","components":{"safePython":"sandbox/main.py"},"contributions":{"fileParsers":[{"fileExtensions":["csv","tsv","txt"],"parseFile":{"component":"safePython","name":"csv_parser"}},{"fileExtensions":["xlsx","xlsm"],"parseFile":{"component":"safePython","name":"xls_parser"}},{"fileExtensions":["json"],"parseFile":{"component":"safePython","name":"json_parser"}}]},"scripts":{"build":null,"test":null}}}]};</script>
-
-<script>
-try {
-  if (localStorage.getItem('appearance') === 'dark' && !window.gristConfig.enableCustomCss) {
-    const style = document.createElement('style');
-    style.setAttribute('id', 'grist-theme');
-    style.textContent = ':root {\n' +
-      '  --grist-theme-bg: url("img/prismpattern.png");\n' +
-      '  --grist-theme-bg-color: #333333;\n' +
-      '}';
-    document.head.append(style);
-  }
-} catch {
-  /* Do nothing. */
-}
-</script>
-
-
-<title>100% Browser-based Grist</title>
-</head>
-<body>
-  
-  <div id='grist-logo-wrapper'>
-    <div class='grist-logo'>
-      <div class='grist-logo-head'>
-        <div class='grist-logo-grain grain-empty'></div>
-        <div class='grist-logo-grain grain-col grain-flip grain-2'></div>
-        <div class='grist-logo-grain grain-col grain-3'></div>
-      </div>
-      <div class='grist-logo-row'>
-        <div class='grist-logo-grain grain-row grain-flip grain-4'></div>
-        <div class='grist-logo-grain grain-cell grain-flip grain-5'></div>
-        <div class='grist-logo-grain grain-cell grain-6'></div>
-      </div>
-      <div class='grist-logo-row'>
-        <div class='grist-logo-grain grain-row grain-flip grain-7'></div>
-        <div class='grist-logo-grain grain-cell grain-flip grain-8'></div>
-        <div class='grist-logo-grain grain-cell grain-9'></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="browser-check-problem" style="display: none;">
-    <table class="browser-check-wrapper"><tr>
-      <td class="browser-check-message">
-        <span class="browser-check-desktop">
-          Grist works best on modern Firefox or Chrome.
-        </span>
-        <span class="browser-check-mobile">
-          Grist mobile support is a work in progress.
-        </span>
-        <a href="https://support.getgrist.com/browser-support" target="_blank">Learn more</a>
-      </td>
-      <td>
-        <div class="browser-check-close" id="browser-check-problem-dismiss">Dismiss</div>
-      </td>
-    </tr></table>
-  </div>
-
-  <script src="jquery/dist/jquery.min.js" crossorigin="anonymous"></script>
-  <script src="jqueryui/jquery-ui.min.js" crossorigin="anonymous"></script>
-  <script src="bootstrap/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-  <script src="bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js" crossorigin="anonymous"></script>
-  <script src="main.bundle.js" crossorigin="anonymous"></script>
-  <script type="application/javascript" src="browser-check.js" crossorigin="anonymous"></script>
-
-</body>
+  <body>
+    <script>
+      bootstrapGrist({
+        //initialFile: 'investment-research.grist',
+        //name: 'bingo',
+      });
+    </script>
+  </body>
 </html>

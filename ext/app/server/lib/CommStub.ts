@@ -130,7 +130,11 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     // throw new Error('not ipmlemented');
     //return this._makeRequest(null, docName, 'openDoc', docName, mode, linkParameters);
   }
-  
+
+  public getDocWorkerUrl(docId: string|null): string {
+    return window.location.href;
+  }
+
   private _wrapMethod<Name extends keyof GristServerAPI>(name: Name): GristServerAPI[Name] {
     // throw Error('not implemented');
     return this._makeRequest.bind(this, null, null, name);
@@ -145,3 +149,140 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 }
 
 Object.assign(Comm.prototype, BackboneEvents);
+
+
+const accessActive = {
+  "user": {
+    "id": 1,
+    "email": "anon@getgrist.com",
+    "name": "Anonymous",
+    "picture": null,
+    "ref": "3VEnpHipNXQZWQyCz5vLxH",
+    "anonymous": true
+  },
+  "org": {
+    "id": 0,
+    "createdAt": "2023-03-11T18:01:50.231Z",
+    "updatedAt": "2023-03-11T18:01:50.231Z",
+    "domain": "docs",
+    "name": "Anonymous",
+    "owner": {
+      "id": 1,
+      "email": "anon@getgrist.com",
+      "name": "Anonymous",
+      "ref": "",
+      "anonymous": true
+    },
+    "access": "viewers",
+    "billingAccount": {
+      "id": 0,
+      "individual": true,
+      "product": {
+        "name": "anonymous",
+        "features": {
+          "workspaces": true,
+          "maxSharesPerWorkspace": 0,
+          "maxSharesPerDoc": 2,
+          "snapshotWindow": {
+            "count": 30,
+            "unit": "days"
+          },
+          "baseMaxRowsPerDocument": 5000,
+          "baseMaxApiUnitsPerDocumentPerDay": 5000,
+          "baseMaxDataSizePerDocument": 10240000,
+          "baseMaxAttachmentsBytesPerDocument": 1073741824,
+          "gracePeriodDays": 14
+        }
+      },
+      "isManager": false,
+      "inGoodStanding": true
+    },
+    "host": null
+  }
+};
+
+const accessAll = {
+  "users": [
+    {
+      "id": 1,
+      "email": "anon@getgrist.com",
+      "name": "Anonymous",
+      "picture": null,
+      "anonymous": true
+    }
+  ],
+  "orgs": []
+};
+
+
+const docInfo = {
+  "name": "Your document",
+  "createdAt": "2023-03-11T23:07:40.999Z",
+  "updatedAt": "2023-03-11T23:07:40.999Z",
+  "id": "new~tTzg3iGWsXq7Q6hSXGb94j",
+  "isPinned": false,
+  "urlId": null,
+  "workspace": {
+    "name": "Home",
+    "createdAt": "2023-02-25T21:02:43.000Z",
+    "updatedAt": "2023-02-25T21:02:43.242Z",
+    "id": 1,
+    "isSupportWorkspace": false,
+    "docs": [],
+    "org": {
+      "name": "Personal",
+      "createdAt": "2023-02-25T21:02:43.000Z",
+      "updatedAt": "2023-02-25T21:02:43.235Z",
+      "id": 1,
+      "domain": "docs-4",
+      "host": null,
+      "owner": {
+        "id": 4,
+        "name": "Support",
+        "picture": null,
+        "ref": "dYWDbNhQWZ1WaXqpiqFfcN"
+      }
+    },
+    "access": "owners"
+  },
+  "aliases": [],
+  "access": "owners",
+  "trunkAccess": "owners"
+};
+
+function newFetch(target, opts) {
+  const url = new URL(target);
+  console.log("HEY", {target, opts, url});
+  if (url.pathname.endsWith('/api/session/access/active')) {
+    return {
+      status: 200,
+      json: () => accessActive,
+    };
+  } else if (url.pathname.endsWith('/api/session/access/all')) {
+    return {
+      status: 200,
+      json: () => accessAll,
+    };
+  } else if (url.pathname.endsWith('/api/docs/new~2d6rcxHotohxAuTxttFRzU')) {
+    docInfo.name = (window as any).staticGristOptions?.name || docInfo.name;
+    return {
+      status: 200,
+      json: () => docInfo,
+    };
+  } else if (url.pathname.endsWith('/api/orgs/0/workspaces')) {
+    return {
+      status: 200,
+      json: () => [],
+    };
+  }
+  return {};
+  // return window.fetch(target, opts);
+}
+
+function installFetch() {
+  if (!(window as any).fetchHook) {
+    (window as any).fetchHook = newFetch;
+  }
+}
+
+installFetch();
