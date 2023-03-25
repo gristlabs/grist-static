@@ -62,7 +62,7 @@ function bootstrapGrist(options) {
     "bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js",
     "main.bundle.js"
   ];
-  const prefix = 'static/';
+  const prefix = '';
   for (const src of css) {
     const asset = document.createElement('link');
     asset.setAttribute('rel', 'stylesheet');
