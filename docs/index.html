@@ -1,46 +1,84 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf8">
-    <title>100% browser-based Grist</title>
-    <style>
-      .example {
-      }
-      .example img {
-        display: block;
-        border: 0;
-        border-radius: 20px;
-      }
-      .example div {
-        padding: 20px;
-        font-size: 200%;
-      }
-      .examples {
-        display: flex;
-        gap: 40px;
-      }
-    </style>
-  </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>grist-static examples</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+</head>
+<body>
 
-  <body>
+<div class="jumbotron text-center">
+  <h1>grist-static</h1>
+  <p>A standalone viewer for <code>.grist</code> files on your website</p>
+</div>
 
-    <div class="examples">
-    
-      <div class="example">
-        <a href="investment-research.html">
-          <img src="https://grist-static.com/icons/investment-research.jpg">
-        </a>
-        <div>Drilling down and summarizing data.</div>
-      </div>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
+      <h3>Example 1</h3>
+      <p><a href="investment-research.html"><img class="img-responsive" src="https://grist-static.com/icons/investment-research.jpg"></a></p>
+      <p><a href="investment-research.html">investment-research.grist</a>, drilling down and summarizing data.</p>
+    </div>
+    <div class="col-sm-4">
+      <h3>Example 2</h3>
+      <p><a href="insurance-plan.html"><img class="img-responsive" src="https://grist-static.com/icons/health-insurance-comparison.jpg"></a></p>
+      <p><a href="insurance-plan.html">insurance-plan.grist</a>, comparing and calculating.</p>
+    </div>
+    <div class="col-sm-4">
+      <h3>Example 3</h3>
+      <p style="border: 1px solid black;"><a href="blank-slate.html"><img class="img-responsive" src="https://grist-static.com/icons/health-insurance-comparison.jpg" style="opacity: 0.0;"></a></p>
+      <p>A tabula rasa, a <a href="blank-slate.html">blank slate</a> to scribble on.</p>
+    </div>
+  </div>
 
-      <div class="example">
-        <a href="insurance-plan.html">
-          <img src="https://grist-static.com/icons/health-insurance-comparison.jpg">
-        </a>
-        <div>Comparing and calculating.</div>
-      </div>
-
+  <div class="row">
+    <div class="col-sm-4">
+      <ul>
+        <li>Use Grist as the PDF of data.</li>
+        <li>
+          Publish your annual report and
+          interactive spreadsheets side by side.
+        </li>
+        <li>
+          Have the data behind your article on hand for readers
+          to explore.
+        </li>
+      </ul>
+      <p>
+        Learn more: <a href="https://github.com/paulfitz/grist-static">github.com/paulfitz/grist-static</a>
+      </p>
     </div>
 
-  </body>
+    <div class="col">
+
+      <pre><code class="language-html">
+&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf8&quot;&gt;
+    &lt;script src=&quot;coi-serviceworker.js&quot;&gt;&lt;/script&gt;
+    &lt;base href=&quot;https://grist-static.com/experiments/e0008/&quot; /&gt;
+    &lt;script src=&quot;pipe/bootstrap.js&quot;&gt;&lt;/script&gt;
+    &lt;title&gt;100% browser-based Grist&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;script&gt;
+      bootstrapGrist({
+        initialFile: 'investment-research.grist',   // path to .grist goes here
+        name: 'Investment Research',                // optional name
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+      </code></pre>
+      <script>hljs.highlightAll();</script>
+    </div>
+  </div>
+</div>
+</body>
 </html>
