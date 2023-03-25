@@ -26,7 +26,7 @@ millions of simultaneous users.
 
 ## See an example
 
-https://paulfitz.github.io/grist-static shows a couple of
+https://gristlabs.github.io/grist-static shows a couple of
 example Grist documents hosted on GitHub Pages:
 
 https://user-images.githubusercontent.com/118367/227564527-82a9929c-40d3-4167-999f-6aeee4955723.mp4
