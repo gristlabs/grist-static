@@ -42,9 +42,7 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
   <head>
     <meta charset="utf8">
     <script src="coi-serviceworker.js"></script>
-    <base href="https://grist-static.com/experiments/e0010/" />
-    <script src="pipe/bootstrap.js"></script>
-    <title>100% browser-based Grist</title>
+    <script src="https://grist-static.com/latest.js"></script>
   </head>
   <body>
     <script>

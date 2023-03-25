@@ -1,3 +1,7 @@
+const bootstrapGristSource = document.currentScript?.src;
+const bootstrapGristPrefix = bootstrapGristSource ? new URL('..', bootstrapGristSource).href : '';
+window.bootstrapGristPrefix = bootstrapGristPrefix;
+
 function bootstrapGrist(options) {
   if (!globalThis.setImmediate) {
     // make do
@@ -62,12 +66,11 @@ function bootstrapGrist(options) {
     "bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js",
     "main.bundle.js"
   ];
-  const prefix = '';
+  const prefix = window.bootstrapGristPrefix || '';
   for (const src of css) {
     const asset = document.createElement('link');
     asset.setAttribute('rel', 'stylesheet');
     asset.setAttribute('crossorigin', 'anonymous');
-    // asset.setAttribute('async', '');
     asset.async = false;
     asset.setAttribute('href', prefix + src);
     document.body.appendChild(asset);
@@ -76,7 +79,6 @@ function bootstrapGrist(options) {
     const asset = document.createElement('script');
     asset.setAttribute('crossorigin', 'anonymous');
     asset.setAttribute('src', prefix + src);
-    //asset.setAttribute('async', '');
     asset.async = false;
     document.body.appendChild(asset);
   }

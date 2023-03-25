@@ -3,7 +3,7 @@
 //import {Comm} from 'app/server/lib/Comm';
 import * as sqlite3 from 'app/server/lib/SQLite';
 import {SQLiteDB} from 'app/server/lib/SQLiteDB';
-import {sql, Database} from 'app/server/lib/SQLite';
+//import {sql, Database} from 'app/server/lib/SQLite';
 import {DocStorage} from 'app/server/lib/DocStorage';
 //import {DocStorageManager} from 'app/server/lib/DocStorageManager';
 import {ActiveDoc} from 'app/server/lib/ActiveDoc';
@@ -43,8 +43,8 @@ const stuff = {
     })
   },
   SQLiteDB,
-  Database,
-  sql,
+//  Database,
+//  sql,
   DocStorage,
   FakeDocStorageManager,
   makeDocStorage: () => {

@@ -12,6 +12,8 @@ for f in $(cd page; ls *.grist *.js *.html); do
 done
 ./scripts/link_page_resources.sh link
 
+cat dist/static/pipe/bootstrap.js | sed "s/^window.bootstrapGristPrefix = .*/window.bootstrapGristPrefix = XXX;/" > dist/latest.js
+
 echo "================================================"
 echo "== Prepared dist/static directory"
 ls dist

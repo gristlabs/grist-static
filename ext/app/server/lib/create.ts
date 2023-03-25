@@ -220,10 +220,10 @@ function pyodideInlineSpawner(): SandboxProcess {
       // Start worker with a data url since cross origin is a bear in
       // this case.
       const base = document.querySelector('base');
-      const prefix = new URL((base?.href || window.location.href) + 'pipe/');
+      const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href) + 'pipe/');
       const selfContained = prefix.hostname === window.location.hostname;
-      console.log("self contained?", {selfContained});
-      const url = selfContained ? 'pipe/py.js' : new URL(pipeCode as any);
+      console.log("self contained?", {selfContained, prefix: prefix.href});
+      const url = selfContained ? (prefix.href  + 'py.js') : new URL(pipeCode as any);
       worker.start(url, selfContained ? '' : prefix.href, 65536, cb).then(() => {
         setWorker(worker);
       }).catch(e => console.error(e));
