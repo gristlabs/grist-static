@@ -35,6 +35,8 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
   public dm: any;
   public ad: any;
+  public client: any;
+  public session: any;
 
   protected listenTo: BackboneEvents["listenTo"];            // set by Backbone
   protected trigger: BackboneEvents["trigger"];              // set by Backbone
@@ -80,6 +82,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     };
     this.dm = new gristy.DocManager(dsm as any, null, null, gs as any);
     this.ad = new gristy.ActiveDoc(this.dm, 'meep');
+    (window as any).gristActiveDoc = this.ad;
     //await this.ad.createEmptyDoc({});
     const hasSeed = (window as any).seedFile;
     await this.ad.loadDoc({mode: 'system'}, {
@@ -87,47 +90,75 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       skipInitialTable: hasSeed,
       useExisting: true,
     });
-    this.ad.addClient({
-      addDocSession: () => {
+    this.client = {
+      clientId: 'one-and-only',
+      removeDocSession: () => 1,
+      interruptConnection: () => 1,
+      sendMessage: (...args: any[]) => {
+        console.log("MESSAGE!", args);
+        this.handleMessage(args);
+      },
+      getLogMeta: () => {
+        return { thing: 1 };
+      },
+      getAltSessionId: () => {
+        return 'alt-session-id';
+      },
+      getCachedUserId: () => {
+        return 1;
+      },
+      getCachedUserRef: () => {
+        return '3VEnpHipNXQZWQyCz5vLxH';
+      },
+      getProfile: () => {
         return {
-          client: {
-            removeDocSession: () => 1,
-            interruptConnection: () => 1,
-            sendMessage: (...args: any[]) => {
-              console.log("MESSAGE!", args);
-              this.handleMessage(args);
-            },
-            getLogMeta: () => {
-              return { thing: 1 };
-            },
-            getAltSessionId: () => {
-              return 'alt-session-id';
-            }
-          },
-          authorizer: {
-            assertAccess: () => true,
-            getUser: () => 1,
-            getLinkParameters: () => {
-              return {};
-            },
-            getCachedAuth() {
-              return {
-                access: 'owners',
-                docId: 'meep',
-                removed: false,
-              };
-            },
-          }
+          "id": 1,
+          "email": "anon@getgrist.com",
+          "name": "Anonymous",
+          "picture": null,
+          "ref": "3VEnpHipNXQZWQyCz5vLxH",
+          "anonymous": true
         };
       },
+    };
+    this.session = {
+      client: this.client,
+      authorizer: {
+        assertAccess: () => true,
+        getUserId: () => 1,
+        getUser: () => {
+          return {
+            "id": 1,
+            "email": "anon@getgrist.com",
+            "name": "Anonymous",
+            "picture": null,
+            "ref": "3VEnpHipNXQZWQyCz5vLxH",
+            "anonymous": true
+          };
+        },
+        getLinkParameters: () => {
+          return linkParameters || {};
+        },
+        getCachedAuth() {
+          return {
+            access: 'owners',
+            docId: 'meep',
+            removed: false,
+          };
+        },
+      }
+    };
+    (window as any).gristSession = this.session;
+    this.ad.addClient({
+      addDocSession: () => this.session
     }, {});
     (window as any).ad = this.ad;
-    const session = { mode: 'system' };
     return {
       docFD: 1,
-      clientId: "1",
-      doc: await this.ad.fetchMetaTables(session),
-      log: await this.ad.getRecentMinimalActions(session),
+      clientId: 'one-and-only',
+      doc: await this.ad.fetchMetaTables(this.session),
+      log: await this.ad.getRecentMinimalActions(this.session),
+      userOverride: await this.ad.getUserOverride(this.session),
       recoveryMode: this.ad.recoveryMode,
     };
     // throw new Error('not ipmlemented');
@@ -146,8 +177,15 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
   public async _makeRequest(clientId: string|null, docId: string|null,
                             methodName: string, ...args: any[]): Promise<any> {
     console.log("CALLING WITH ARGS", {methodName, args});
-    args[0] = { mode: 'system' };
-    return this.ad[methodName].call(this.ad, ...args);
+    args[0] = this.session; // { mode: 'system', client: this.client };
+    try {
+      const result = await this.ad[methodName].call(this.ad, ...args);
+      console.log("GOT RESULT", {methodName, args, result});
+      return result;
+    } catch (e) {
+      console.log("GOT FAILURE", {methodName, args, e});
+      throw e;
+    }
   }
 }
 
@@ -253,8 +291,10 @@ const docInfo = {
   "trunkAccess": "owners"
 };
 
-function newFetch(target: string, opts: any) {
+async function newFetch(target: string, opts: any) {
   const url = new URL(target);
+  const activeDoc = (window as any).gristActiveDoc;
+  const session = (window as any).gristSession;
   console.log("HEY", {target, opts, url});
   if (url.pathname.endsWith('/api/session/access/active')) {
     return {
@@ -277,8 +317,32 @@ function newFetch(target: string, opts: any) {
       status: 200,
       json: () => [],
     };
+  } else if (url.pathname.endsWith('/api/docs/new~tTzg3iGWsXq7Q6hSXGb94j/snapshots')) {
+    return {
+      status: 200,
+      json: () => ({ snapshots: [] }),
+    };
+  } else if (url.pathname.endsWith('/api/docs/new~tTzg3iGWsXq7Q6hSXGb94j/snapshots')) {
+    return {
+      status: 200,
+      json: () => ({ snapshots: [] }),
+    };
+  } else if (url.pathname.endsWith('/api/docs/new~tTzg3iGWsXq7Q6hSXGb94j/usersForViewAs')) {
+    const result = await activeDoc.getUsersForViewAs(session);
+    return {
+      status: 200,
+      json: () => result,
+    };
+  } else if (url.pathname.endsWith('/api/log')) {
+    return {
+      status: 200,
+      json: () => ({}),
+    };
   }
-  return {};
+  return {
+    status: 404,
+    json: () => ({}),
+  };
   // return window.fetch(target, opts);
 }
 

@@ -152,7 +152,7 @@ export class JsDatabase implements MinDB {
     console.log("NO ATTACH LIMIT");
   }
   async runAndGetId(sql: string, ...params: any[]) {
-    await this.run(sql, params);
+    await this.run(sql, ...params);
     const result = await this.get('SELECT last_insert_rowid() AS id');
     console.log({runAndGetId: result});
     return result.id;
