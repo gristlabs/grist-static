@@ -62,19 +62,20 @@ function bootstrapGrist(options) {
     "bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js",
     "main.bundle.js"
   ];
+  const prefix = 'static/';
   for (const src of css) {
     const asset = document.createElement('link');
     asset.setAttribute('rel', 'stylesheet');
     asset.setAttribute('crossorigin', 'anonymous');
     // asset.setAttribute('async', '');
     asset.async = false;
-    asset.setAttribute('href', src);
+    asset.setAttribute('href', prefix + src);
     document.body.appendChild(asset);
   }
   for (const src of js) {
     const asset = document.createElement('script');
     asset.setAttribute('crossorigin', 'anonymous');
-    asset.setAttribute('src', src);
+    asset.setAttribute('src', prefix + src);
     //asset.setAttribute('async', '');
     asset.async = false;
     document.body.appendChild(asset);

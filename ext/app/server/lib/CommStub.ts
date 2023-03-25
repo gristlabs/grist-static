@@ -328,7 +328,15 @@ async function newFetch(target: string, opts: any) {
       json: () => ({ snapshots: [] }),
     };
   } else if (url.pathname.endsWith('/api/docs/new~tTzg3iGWsXq7Q6hSXGb94j/usersForViewAs')) {
-    const result = await activeDoc.getUsersForViewAs(session);
+    // Linked-As parameters should not be sent - really need a separate
+    // request based object.
+    const result = await activeDoc.getUsersForViewAs({
+      ...session,
+      authorizer: {
+        ...session.authorizer,
+        getLinkParameters: () => ({}),
+      }
+    });
     return {
       status: 200,
       json: () => result,

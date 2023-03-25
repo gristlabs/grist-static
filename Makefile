@@ -3,8 +3,7 @@ default:
 	@echo "  git submodule update --init"
 	@echo "  make requirements"
 	@echo "  make build"
-	@echo "  ./scripts/link_page_resources.sh"
-	@echo "  python -m http.server 3030"
+	@echo "  make serve"
 	@echo "  # now visit http://localhost:3030/page/"
 
 requirements:
@@ -24,6 +23,12 @@ build:
 
 start:
 	cd core && GRIST_SESSION_SECRET=something GRIST_SANDBOX_FLAVOR=pyodideInline yarn start
+
+link:
+	./scripts/link_page_resources.sh
+
+package:
+	./scripts/build_dist.sh
 
 serve:
 	@echo "========================================="

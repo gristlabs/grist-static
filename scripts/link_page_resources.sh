@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 mode=link
 if [[ "$1" = "copy" ]]; then
@@ -14,7 +14,6 @@ function transfer {
   if [[ "$mode" = "link" ]]; then
     ln -s $src $dest
   else
-    echo "in $PWD"
     cp -r $src_extra$src $dest
   fi
 }
@@ -58,3 +57,5 @@ transfer ./ ../../../node_modules/pyodide pyodide
 transfer ../../../core/app/server/ ../../sandbox/pyodide/_build/packages packages
 cd ..
 
+echo "================================================"
+echo "== Prepared page directory in mode: $mode"
