@@ -61,6 +61,16 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
   * I've been pushing Grist code to https://grist-static.com/ as a CDN; you can produce it all yourself using this repo.
   * After that, it is just a case of putting a `.grist` file on your server beside this `.html` file, and filing in the options to `bootstrapGrist`.
 
+## Differences with regular Grist
+
+ * Changes aren't stored.
+ * Changes are not shared with other viewers.
+ * No specific access control.
+ * Very immature, some features not yet ported, such as:
+   - Attachments
+   - Importing and exporting
+   - Data size measurement
+
 ## Tips for small .grist files
 
 Grist spreadsheets by default store a lot of history in the `.grist` file.
@@ -79,7 +89,7 @@ Sorry this is awkward.
 git submodule update --init
 make requirements
 make build
-./scripts/link_page_resources.sh
+make link
 python -m http.server 3030
 # now visit http://localhost:3030/page/index.html
 ```
@@ -89,7 +99,8 @@ directory, for convenience during development. To collect
 files for uploading, use instead:
 
 ```
-./scripts/link_page_resources.sh copy
+make package
+# everything you need is in dist/static
 ```
 
 ## Roadmap
@@ -104,7 +115,6 @@ I am interested in making user changes persist in their browser -
 may be a good option for that, once it has broad browser support.
 
  * [X] Get something that works on a webserver without special COOP/COEP headers.
-
  * [ ] Start making versioned .zip releases of all needed assets.
  * [ ] Get a few small tweaks to enable plugging in alternate storage and build steps landed upstream in `grist-core`.
  * [ ] Whittle down the code and clean up the demo now I know what I'm doing.
@@ -113,3 +123,4 @@ may be a good option for that, once it has broad browser support.
  * [ ] Enable at least one export option (Download *.grist seems easiest).
  * [ ] Enable at least one import option.
  * [ ] Give a better way of pruning *.grist files.
+
