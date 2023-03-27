@@ -68,6 +68,7 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
  * No specific access control.
  * Very immature, some features not yet ported, such as:
    - Attachments
+   - Custom widgets
    - Importing and exporting
    - Data size measurement
 
