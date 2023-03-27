@@ -1,26 +1,26 @@
 # grist-static: Grist on static sites without embeds
 
-This is a way to view and interact with `.grist` files (Grist spreadsheets)
-on regular websites, with no special back-end support needed.
+This is an experimental way to view and interact with `.grist` files
+(Grist spreadsheets) on regular websites, with no special back-end support needed.
 The idea here is that it would be great for making reports if we could put
 spreadsheets on a website like we do PDFs, with nice formatting
 and navigation options and not much fuss.
 
-For many purposes [Grist embedding](https://support.getgrist.com/embedding/)
-may be what you want. That will let you embed a Grist spreadsheet
-from a Grist installation (such as the hosted service offered by
-Grist Labs) onto another website, in an iframe. But if you cannot
-host your data externally, and don't want the operational burden of
-standing up a Grist installation of your own, `grist-static` gives
-you a way to easily render Grist spreadsheets on regular websites.
-
-The most likely use-cases where you will be happy are for reporting.
+If you *can* run a special back-end,
+[grist-core](https://github.com/gristlabs/grist-core) is the most
+battle-tested way to host Grist spreadsheets.
+And for many purposes [Grist embedding](https://support.getgrist.com/embedding/)
+may be adequate, where your embed a Grist spreadsheet
+from an external Grist installation (such as the hosted service offered by
+Grist Labs). But if you cannot host your data externally, and don't want
+the operational burden of standing up a Grist installation of your own,
+`grist-static` gives you a way to easily render Grist spreadsheets
+on regular websites.
 Like a PDF, people will be able to view the spreadsheet, navigate
 around in it, and search within it. Better than a PDF, they'll be
 able to change selections, and experiment with changing numbers to
 see what happens. Every viewer has their own copy, and their changes
 won't be seen by others, or stored.
-
 This would also be a scalable way to show a Grist document to
 millions of simultaneous users.
 
