@@ -68,9 +68,14 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
  * No specific access control.
  * Very immature, some features not yet ported, such as:
    - Attachments
+	 - Should be doable (e.g. via service worker)
    - Custom widgets
+	 - These work now on Chrome (using `credentialless`)
+	 - For other browsers, widget must be pulled from a site with certain headers set
    - Importing and exporting
+     - Again, doable, just "different"
    - Data size measurement
+     - A needed configuration option on compiling SQLite.
 
 ## Tips for small .grist files
 
