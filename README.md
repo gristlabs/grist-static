@@ -71,7 +71,7 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
 	 - Should be doable (e.g. via service worker)
    - Custom widgets
 	 - These work now on Chrome (using `credentialless`)
-	 - For other browsers, widget must be pulled from a site with certain headers set
+	 - For other browsers, custom widget must be pulled from a site with certain headers set, OR stored and served alongside the document
    - Importing and exporting
      - Again, doable, just "different"
    - Data size measurement
@@ -122,6 +122,7 @@ may be a good option for that, once it has broad browser support.
 
  * [X] Get something that works on a webserver without special COOP/COEP headers.
  * [ ] Start making versioned .zip releases of all needed assets.
+ * [ ] Mirror grist-widgets from github pages to a site with the needed headers (such as grist-static.com). 
  * [ ] Get a few small tweaks to enable plugging in alternate storage and build steps landed upstream in `grist-core`.
  * [ ] Whittle down the code and clean up the demo now I know what I'm doing.
  * [ ] Hide parts of UI that don't make sense in this context.
