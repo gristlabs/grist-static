@@ -6,13 +6,14 @@ import {SQLiteDB} from 'app/server/lib/SQLiteDB';
 //import {sql, Database} from 'app/server/lib/SQLite';
 import {DocStorage} from 'app/server/lib/DocStorage';
 //import {DocStorageManager} from 'app/server/lib/DocStorageManager';
-import {ActiveDoc} from 'app/server/lib/ActiveDoc';
+import {ActiveDoc, Deps as ActiveDocDeps} from 'app/server/lib/ActiveDoc';
 import {DocManager} from 'app/server/lib/DocManager';
 import {NSandbox} from 'app/server/lib/NSandbox';
 
 import {create} from 'app/server/lib/create';
 
 process.env.GRIST_SANDBOX_FLAVOR = 'pyodideInline';
+ActiveDocDeps.ACTIVEDOC_TIMEOUT_ACTION = 'ignore';
 
 class FakeDocStorageManager {
   getPath(x: string) { return x; }
@@ -24,30 +25,14 @@ class FakeDocStorageManager {
   prepareLocalDoc() {}
 }
 
-export function get42() {
+// A simple test function for when things go wrong.
+function get42() {
   return 42;
 }
 
-/*
-export function checkTypes() {
-  /// const c = new Comm(null as any, null as any);
-  const s = new sqlite3.Database('x', 'x', () => 1);
-  return [s];
-}
-*/
-
-const stuff = {
+const backend = {
   get42,
-  /*
-  makeDb: async() => {
-    return new Promise((resolve) => {
-      let x: any = new sqlite3.Database('x', 'x', () => resolve(x));
-    })
-  },
-  */
   SQLiteDB,
-//  Database,
-//  sql,
   DocStorage,
   FakeDocStorageManager,
   makeDocStorage: () => {
@@ -60,4 +45,4 @@ const stuff = {
   create,
 };
 
-export default stuff;
+export default backend;

@@ -25,17 +25,13 @@ class Pyodide {
         },
         sendFromSandbox: (data) => {
           data = data.toJs();
-          console.log("sendFromSandbox", {data});
           sender(data);
-          // return fs.writeSync(OUTGOING_FD, Buffer.from(data.toJs()));
         }
       }
     });
     this.pyodide.setStdin({
       stdin: () => {
-        console.log("stdin...");
         const result = receiver();
-        console.log("stdin gave ...", {result});
         return result;
       },
     });
@@ -79,7 +75,6 @@ sys.version
     await this.pyodide.loadPackage(
       lst.map(l => this.prefix + l)
     );
-    console.log("loaded", {lst});    
   }
 
   run() {
@@ -88,13 +83,8 @@ sys.version
   sys.path.append('/lib/python3.9/site-packages/grist/')
   sys.path.append('/lib/python3.10/site-packages/grist/')
   sys.path.append('/lib/python3.11/site-packages/grist/')
-  #sys.path.append('/grist')
-  print("Hello")
   import grist
-  print("There")
-  print(sys.path)
   import main
-  print("You")
   import os
   os.environ['PIPE_MODE'] = 'pyodide'
   os.environ['IMPORTDIR'] = '/import'
@@ -121,8 +111,6 @@ class InsideWorkerWithBlockingStream {
           this.storage = new Uint8Array(this.buffer, 16);
         }
         if (this.buffer) {
-          console.log('worker received buffer - acknowledging');
-          console.log('also got prefix', {prefix: this.prefix});
           this.postMessage({type: 'ping'});
           resolve();
         }
@@ -133,9 +121,7 @@ class InsideWorkerWithBlockingStream {
   read() {
     let tresult = null;
     while (true) {
-      console.log("reaaad....");
       const result = Atomics.wait(this.key, 0, 0);
-      console.log("past atomic wait");
       const ll = this.len[0];
       const offset = this.offset[0];
       const tlen = this.tlen[0];
@@ -144,12 +130,9 @@ class InsideWorkerWithBlockingStream {
       const dsti = new Uint8Array(tresult, offset);
       const srci = this.storage.subarray(0, ll);
       dsti.set(srci);
-      console.log("read", {done, ll, offset, tlen});
       Atomics.store(this.key, 0, 0);
       Atomics.notify(this.key, 0, 1);
-      console.log("sending ping");
       this.postMessage({type: 'ping'});
-      console.log("sent ping");
       if (done) {
         return tresult;
       }
@@ -157,9 +140,6 @@ class InsideWorkerWithBlockingStream {
   }
 
   write(data) {
-    console.log("POSTING", data);
-    // TODO Buffer is nodey
-    //this.postMessage({type: 'data', data: Buffer.from(data.toJs())});
     this.postMessage({type: 'data', data: data});
   }
 
@@ -195,22 +175,12 @@ async function main() {
   const worker = new InsideWorkerWithBlockingStream();
   await worker.start();
   const sender = (data) => {
-    console.log("inner snd data", {data});
     worker.write(data);
   };
   const receiver = () => {
-    console.log("inner wait for data");
     const result = worker.read();
-    console.log("inner wait for data", {result});
     return result;
   }
-  /*
-  while (true) {
-    const info = worker.read();
-    const txt = new TextDecoder().decode(info);
-    worker.write('ya ya ' + txt);
-  }
-  */
   
   await pyodide.start(worker.prefix, sender, receiver);
   await pyodide.loadPackages();
@@ -219,10 +189,7 @@ async function main() {
     pyodide.run();
   } catch (e) {
     console.error("Error!");
-    // console.error("Error!", {e});
     throw e;
-  } finally {
-    console.log("pyodide out");
   }
 }
 

@@ -1,14 +1,8 @@
+import pipeCode from 'app/pipe/py';
 import { makeSimpleCreator } from 'app/server/lib/ICreate';
-//import { BetterSqliteVariant } from 'app/server/lib/SqliteBetter';
 import { SqliteJsVariant } from 'app/server/lib/SqliteJs';
 import { SandboxProcess } from 'app/server/lib/NSandbox';
-
-//import * as pyodide from 'pyodide';
-// import Worker from 'web-worker';
-
 import { Mutex } from 'async-mutex';
-
-import pipeCode from 'app/pipe/py.js';
 
 class OutsideWorkerWithBlockingStream {
   private worker: any;
@@ -62,9 +56,7 @@ class OutsideWorkerWithBlockingStream {
       buffer: this.buffer,
       prefix: this.prefix,
     });
-    console.log('Waiting to hear from worker...');
     await this._waitPing();
-    console.log('... heard from worker.');
   }
 
   close() {
@@ -85,34 +77,24 @@ class OutsideWorkerWithBlockingStream {
   }
 
   async writeCore(data: any) {
-    console.log("Writing", data);
     const mlen = this.storage.byteLength;
     let at = 0;
     while (at < data.byteLength) {
       const jlen = Math.min(mlen, data.byteLength - at);
       const part = data.subarray(at, jlen + at);
-      console.log("write at", {at, jlen, part});
       this.storage.set(part);
       this.len[0] = part.byteLength;
       this.tlen[0] = data.byteLength;
       this.offset[0] = at;
       Atomics.store(this.key, 0, 1);
-      console.log("notifying");
       Atomics.notify(this.key, 0, 1);
-      console.log("notified");
       at += part.byteLength;
       // For simplicity, wait after sending.
       try {
-        console.log("tried wait...");
         await (Atomics as any).waitAsync(this.key, 0, 1).value;
-        console.log("tried wait");
       } catch (e) {
-        // Atomics may not be implemented - wait for ping instead
-        //if (Atomics.load(this.key, 0)) {
-        console.log("wait ping");
+        // Atomics may not be implemented, wait for ping instead.
         await this._waitPing();
-        console.log("waited ping");
-        //}
       }
     }
   }
@@ -157,13 +139,8 @@ class OutsideWorkerWithBlockingStream {
 
 export const create = makeSimpleCreator({
   getSqliteVariant() {
-    //if (process.env.wefwefwef) {
-    //console.log("BETTER SQLITE VARIANT");
-    //return new BetterSqliteVariant();
-    //} else {
-    console.log("SQLITE JS VARIANT");
+    // return new BetterSqliteVariant();
     return new SqliteJsVariant();
-    ///}
   },
   getSandboxVariants() {
     return {
@@ -174,55 +151,27 @@ export const create = makeSimpleCreator({
 
 
 function pyodideInlineSpawner(): SandboxProcess {
-  //console.log("Running loadpyodide");
-  //pyodide.loadPyodide();
-  console.log("=======================================");
-  console.log("=======================================");
-  console.log("=======================================");
-  console.log("=======================================");
-  console.log("=======================================");
-  console.log("Worker thing2");
-  //const url = new URL('py.js', 'file:///home/paulfitz/cvs/grist-static/pipe/zing');
-  //console.log("URL IS", {url, full: url.href});
-  //const worker = new Worker(url, { type: 'module' });
-  /*
-  let _cb: any = null;
-  worker.addEventListener('message', e => {
-    console.log(e.data)  // "hiya!"
-    if (_cb) {
-      _cb(e.data);
-    }
-  });
-  
-  worker.postMessage('hello');
-  console.log("Ran loadpyodide");
-  */
   let setWorker: (worker: OutsideWorkerWithBlockingStream) => void;
   let worker = new Promise<OutsideWorkerWithBlockingStream>(resolve => {
     setWorker = resolve;
   });
   return {
     sendData: (data: any) => {
-      console.log('asked to send data');
       worker.then(async w => {
-        console.log("writing data...");
         try {
           await w.write(data);
-          console.log("wrote data...");
         } catch (e) {
-          console.log("error when writing", e);
+          console.error("error when writing", e);
         }
       }).catch(e => console.error(e));
     },
     getData: (cb) => {
-      console.log('asked to get data...');
       const worker = new OutsideWorkerWithBlockingStream();
       // Start worker with a data url since cross origin is a bear in
       // this case.
       const base = document.querySelector('base');
       const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href) + 'pipe/');
       const selfContained = prefix.hostname === window.location.hostname;
-      console.log("self contained?", {selfContained, prefix: prefix.href});
       const url = selfContained ? (prefix.href  + 'py.js') : new URL(pipeCode as any);
       worker.start(url, selfContained ? '' : prefix.href, 65536, cb).then(() => {
         setWorker(worker);
@@ -235,10 +184,10 @@ function pyodideInlineSpawner(): SandboxProcess {
       prepareToClose() {
       },
       async close() {
-        console.log("close!!");
+        console.log("close sandbox");
       },
       async kill() {
-        console.log("kill!!");
+        console.log("kill sandbox");
       },
     }
   };

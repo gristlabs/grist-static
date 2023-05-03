@@ -1,11 +1,6 @@
 import * as dispose from 'app/client/lib/dispose';
-//import * as log from 'app/client/lib/log';
-//import {CommRequest, CommResponse, CommResponseBase, CommResponseError, ValidEvent} from 'app/common/CommTypes';
-//import {UserAction} from 'app/common/DocActions';
 import {DocListAPI, OpenLocalDocResult} from 'app/common/DocListAPI';
 import {GristServerAPI} from 'app/common/GristServerAPI';
-//import {getInitialDocAssignment} from 'app/common/urlUtils';
-//import {Events as BackboneEvents} from 'backbone';
 
 import gristy from 'app/server/Doc';
 
@@ -51,31 +46,25 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
   }
 
   public initialize() {
-    console.log("Initialize, returning nothing though");
   }
 
   public addUserActions() {
   }
 
   public useDocConnection() {
-    console.log("useDocConnection, returning nothing though");
   }
 
   public releaseDocConnection() {
-    console.log("releaseDocConnection, returning nothing though");
   }
   
   public handleMessage(msg: any) {
     msg = msg[0];
     msg.docFD = 1;
-    console.log("MESSAGE TYPE", msg.type);
     this.trigger(msg.type, msg);
-    console.log("MESSAGE TYPED", msg.type);
   }
   
   public async openDoc(docName: string, mode?: string,
                        linkParameters?: Record<string, string>): Promise<OpenLocalDocResult> {
-    console.log("openDoc");
     const dsm = new gristy.FakeDocStorageManager();
     const gs = {
       create: gristy.create,
@@ -95,7 +84,6 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       removeDocSession: () => 1,
       interruptConnection: () => 1,
       sendMessage: (...args: any[]) => {
-        console.log("MESSAGE!", args);
         this.handleMessage(args);
       },
       getLogMeta: () => {
@@ -176,14 +164,12 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
   public async _makeRequest(clientId: string|null, docId: string|null,
                             methodName: string, ...args: any[]): Promise<any> {
-    console.log("CALLING WITH ARGS", {methodName, args});
     args[0] = this.session; // { mode: 'system', client: this.client };
     try {
       const result = await this.ad[methodName].call(this.ad, ...args);
-      console.log("GOT RESULT", {methodName, args, result});
       return result;
     } catch (e) {
-      console.log("GOT FAILURE", {methodName, args, e});
+      console.error("GOT FAILURE", {methodName, args, e});
       throw e;
     }
   }
@@ -295,7 +281,6 @@ async function newFetch(target: string, opts: any) {
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
   const session = (window as any).gristSession;
-  console.log("HEY", {target, opts, url});
   if (url.pathname.endsWith('/api/session/access/active')) {
     return {
       status: 200,

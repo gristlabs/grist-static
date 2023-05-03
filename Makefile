@@ -12,7 +12,7 @@ requirements:
 	cd core && test -e ext && echo ext present || ln -s ../ext ext
 	cd core && yarn run install:python
 	cd core/sandbox/pyodide && make setup
-	cd core/sandbox && ./make.sh && cp dist/*.whl pyodide/_build/packages/
+	cd core/sandbox && ./bundle_as_wheel.sh && cp dist/*.whl pyodide/_build/packages/
 
 update-lock:
 	cd ext && yarn install --modules-folder=../node_modules --verbose
@@ -21,8 +21,10 @@ update-lock:
 build:
 	cd core && yarn run build:prod
 
+# This will keep the code built as you edit it; the server it runs is
+# useless, just ignore it.
 start:
-	cd core && GRIST_SESSION_SECRET=something GRIST_SANDBOX_FLAVOR=pyodideInline yarn start
+	cd core && GRIST_SESSION_SECRET=something yarn start
 
 link:
 	./scripts/link_page_resources.sh
