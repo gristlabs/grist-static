@@ -29,6 +29,9 @@ start:
 link:
 	./scripts/link_page_resources.sh
 
+copy:
+	./scripts/link_page_resources.sh copy
+
 package:
 	./scripts/build_dist.sh
 

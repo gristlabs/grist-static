@@ -34,18 +34,25 @@ transfer ../../core/static/ ../node_modules/jquery jquery
 transfer ../../core/static/ ../node_modules/components-jqueryui jqueryui
 transfer ../../core/static/ ../node_modules/highlight.js/styles/default.css hljs.default.css
 
-# silly...
+# For some reason, it is hard to pin down where
+# sql.js is going to look. In principle it can
+# be controlled, but there is some nuance I'm
+# not getting.
+# Place in nested static.
 rm -rf static
 mkdir -p static
 cd static
 transfer ./ ../../../node_modules/sql.js sql.js
 cd ..
-# super silly...
+# Place in nested node_modules.
 rm -rf node_modules
 mkdir -p node_modules
 cd node_modules
 transfer ./ ../../../node_modules/sql.js sql.js
 cd ..
+# Place without nesting.
+rm -rf sql.js
+transfer ./ ../../node_modules/sql.js sql.js
 
 rm -rf pipe
 mkdir -p pipe
