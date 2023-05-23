@@ -23,6 +23,7 @@ class FakeDocStorageManager {
   prepareToCreateDoc() {}
   closeDocument() {}
   prepareLocalDoc() {}
+  makeBackup() {}
 }
 
 // A simple test function for when things go wrong.

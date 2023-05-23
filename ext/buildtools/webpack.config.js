@@ -27,6 +27,8 @@ base.resolve.alias = {
   'child_process': 'app/server/lib/childProcessStub',
   'tmp': 'app/server/lib/tmpStub',
   'app/client/components/Comm': 'app/server/lib/CommStub',
+  'app/server/utils/ProxyAgent': 'app/server/lib/ProxyAgentStub',
+  'app/client/Hooks': 'app/client/HookStub',
 };
 
 base.resolve.fallback = {
@@ -47,6 +49,7 @@ base.resolve.fallback = {
   "child_process": false,
   "http2": false,
   "worker_threads": false,
+  "react-native-sqlite-storage": false,
 };
 
 base.output = {

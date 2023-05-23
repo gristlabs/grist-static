@@ -68,6 +68,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     const dsm = new gristy.FakeDocStorageManager();
     const gs = {
       create: gristy.create,
+      getTelemetryManager() { return undefined; },
     };
     this.dm = new gristy.DocManager(dsm as any, null, null, gs as any);
     this.ad = new gristy.ActiveDoc(this.dm, 'meep');
@@ -278,6 +279,7 @@ const docInfo = {
 };
 
 async function newFetch(target: string, opts: any) {
+  console.log('newFetch', { target, opts });
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
   const session = (window as any).gristSession;
