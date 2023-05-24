@@ -123,11 +123,14 @@ may be a good option for that, once it has broad browser support.
  * [X] Get something that works on a webserver without special COOP/COEP headers.
  * [ ] Start making versioned .zip releases of all needed assets.
  * [ ] Mirror grist-widgets from github pages to a site with the needed headers (such as grist-static.com). 
- * [ ] Get a few small tweaks to enable plugging in alternate storage and build steps landed upstream in `grist-core`.
+ * [X] Get a few small tweaks to enable plugging in alternate storage and build steps landed upstream in `grist-core`.
  * [ ] Whittle down the code and clean up the demo now I know what I'm doing.
  * [ ] Hide parts of UI that don't make sense in this context.
  * [ ] Consider switching to SQLite developers' version of sqlite.js, which has good local storage support.
  * [ ] Enable at least one export option (Download *.grist seems easiest).
  * [ ] Enable at least one import option.
  * [ ] Give a better way of pruning *.grist files.
-
+ * [ ] Currently, if a *.grist file is old relative to the code, and a migration needs to run, the "data engine"
+   may end up on the critical path to showing the document (and that remains the case indefinitely since the result
+   of migration cannot be stored). The data engine is relatively slow to start up, compared to the rest of the
+   app, so this is sad. Look at ways around this.
