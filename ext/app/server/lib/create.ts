@@ -130,8 +130,9 @@ export const create: ICreate = {
       // return new BetterSqliteVariant();
       return new SqliteJsVariant();
     },
+    deploymentType: 'static',
   }),
   NSandbox: (_options: ISandboxCreationOptions) => {
     return new PyodideSandbox();
-  }
+  },
 };

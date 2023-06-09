@@ -11,6 +11,7 @@
     "../../../stubs/app/server/logins.ts",
     "../../../stubs/app/server/lib/TelemetryManager.ts",
     "../pipe/py.js",
+    "../pipe/webworker.js",
   ],
   "references": [
     { "path": "../../../app/common" },
