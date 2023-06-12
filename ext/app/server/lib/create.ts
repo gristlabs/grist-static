@@ -96,6 +96,15 @@ class OutsideWorkerWithBlockingStream {
   }
 }
 
+// Returns a blob:// URL which points
+// to a javascript file which will call
+// importScripts with the given URL
+// Copied from https://stackoverflow.com/a/62914052/2482744
+// Used to avoid CORS errors when loading worker.
+function getWorkerURL(url: string) {
+  const content = `importScripts("${url}");`;
+  return URL.createObjectURL(new Blob([content], { type: "text/javascript" }));
+}
 
 class PyodideSandbox implements ISandbox {
   private worker: OutsideWorkerWithBlockingStream;
@@ -104,7 +113,7 @@ class PyodideSandbox implements ISandbox {
     this.worker = new OutsideWorkerWithBlockingStream();
     const base = document.querySelector('base');
     const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href));
-    const url = prefix.href + 'webworker.bundle.js';
+    const url = getWorkerURL(prefix.href + 'webworker.bundle.js');
     this.worker.start(url, prefix.href + 'pipe/');
   }
 
