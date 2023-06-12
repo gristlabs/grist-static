@@ -41,7 +41,6 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
 <html>
   <head>
     <meta charset="utf8">
-    <script src="coi-serviceworker.js"></script>
     <script src="https://grist-static.com/latest.js"></script>
   </head>
   <body>
@@ -55,9 +54,6 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
 </html>
 ```
 
-  * You'll need [coi-serviceworker.js](https://github.com/gzuidhof/coi-serviceworker) to set up a form of isolation browsers
-    want these days for certain advanced features (you can skip this if you have authority to set special headers on your
-    webserver). 
   * I've been pushing Grist code to https://grist-static.com/ as a CDN; you can produce it all yourself using this repo.
   * After that, it is just a case of putting a `.grist` file on your server beside this `.html` file, and filing in the options to `bootstrapGrist`.
 
