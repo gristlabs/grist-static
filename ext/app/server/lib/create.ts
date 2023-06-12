@@ -106,10 +106,10 @@ class PyodideSandbox implements ISandbox {
     // Start worker with a data url since cross origin is a bear in
     // this case.
     const base = document.querySelector('base');
-    const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href) + 'pipe/');
+    const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href));
     const selfContained = prefix.hostname === window.location.hostname;
-    const url = selfContained ? (prefix.href + 'py.js') : new URL(pipeCode as any);
-    this.worker.start(url, selfContained ? '' : prefix.href);
+    const url = selfContained ? (prefix.href + 'webworker.bundle.js') : new URL(pipeCode as any);
+    this.worker.start(url, selfContained ? 'pipe/' : prefix.href + 'pipe/');
   }
 
   async shutdown() {

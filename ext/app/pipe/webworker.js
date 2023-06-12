@@ -1,6 +1,8 @@
 /***
  * This is web worker code for running the Grist data engine.
  */
+import {guessColInfo} from 'app/common/ValueGuesser';
+import {convertFromColumn} from 'app/common/ValueConverter';
 
 class Pyodide {
   async start(prefix) {
@@ -15,7 +17,15 @@ class Pyodide {
     this.pyodide = await this.myLoadPyodide({
       jsglobals: {
         Object: {},
-        setTimeout: function(code, delay) {
+        callExternal: function (name, args) {
+          const func = {
+            guessColInfo,
+            convertFromColumn
+          }[name];
+          args = args.toJs({dict_converter: Object.fromEntries});
+          return func(...args);
+        },
+        setTimeout: function (code, delay) {
           if (self.adminMode) {
             setTimeout(code, delay);
             // Seems to be OK not to return anything, so we don't.
@@ -76,10 +86,18 @@ sys.version
   import main
   import sandbox as sandbox_mod
   import os
+  import js
+  
   os.environ['IMPORTDIR'] = '/import'
   sandbox = sandbox_mod.default_sandbox = sandbox_mod.Sandbox(None, None)
   sandbox.run = lambda: print("Sandbox is running")
   
+  def call_external(name, *args):
+    result = js.callExternal(name, args)
+    return result.to_py()
+  
+  sandbox.call_external = call_external
+
   def call(name, args):
     return sandbox._functions[name](*args.to_py())
     
@@ -151,7 +169,7 @@ async function main() {
     console.error("Error!");
     throw e;
   }
-  await this.postMessage({ type: 'ping' });
+  await postMessage({ type: 'ping' });
 }
 
 main().catch(e => console.error(e));
