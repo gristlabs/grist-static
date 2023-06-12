@@ -1,9 +1,11 @@
 /***
  * This is web worker code for running the Grist data engine.
  */
+import {guessColInfo} from 'app/common/ValueGuesser';
+import {convertFromColumn} from 'app/common/ValueConverter';
 
 class Pyodide {
-  async start(prefix, sender, receiver) {
+  async start(prefix) {
     this.prefix = prefix;
     if (typeof importScripts === 'function') {
       importScripts(this.prefix + 'pyodide/pyodide.js');
@@ -15,7 +17,15 @@ class Pyodide {
     this.pyodide = await this.myLoadPyodide({
       jsglobals: {
         Object: {},
-        setTimeout: function(code, delay) {
+        callExternal: function (name, args) {
+          const func = {
+            guessColInfo,
+            convertFromColumn
+          }[name];
+          args = args.toJs({dict_converter: Object.fromEntries});
+          return func(...args);
+        },
+        setTimeout: function (code, delay) {
           if (self.adminMode) {
             setTimeout(code, delay);
             // Seems to be OK not to return anything, so we don't.
@@ -23,17 +33,7 @@ class Pyodide {
             throw new Error('setTimeout not available');
           }
         },
-        sendFromSandbox: (data) => {
-          data = data.toJs();
-          sender(data);
-        }
       }
-    });
-    this.pyodide.setStdin({
-      stdin: () => {
-        const result = receiver();
-        return result;
-      },
     });
   }
 
@@ -83,69 +83,60 @@ sys.version
   sys.path.append('/lib/python3.9/site-packages/grist/')
   sys.path.append('/lib/python3.10/site-packages/grist/')
   sys.path.append('/lib/python3.11/site-packages/grist/')
-  import grist
   import main
+  import sandbox as sandbox_mod
   import os
-  os.environ['PIPE_MODE'] = 'pyodide'
+  import js
+  
   os.environ['IMPORTDIR'] = '/import'
+  sandbox = sandbox_mod.default_sandbox = sandbox_mod.Sandbox(None, None)
+  sandbox.run = lambda: print("Sandbox is running")
+  
+  def call_external(name, *args):
+    result = js.callExternal(name, args)
+    return result.to_py()
+  
+  sandbox.call_external = call_external
+
+  def call(name, args):
+    return sandbox._functions[name](*args.to_py())
+    
+  main.call = call
+
   main.main()
 `);
+  }
+
+  call(name, args) {
+    return this.pyodide.pyimport("main").call(name, args);
   }
 }
 
 
 class InsideWorkerWithBlockingStream {
+  constructor(pyodide) {
+    this.pyodide = pyodide;
+  }
+
   async start() {
     this._getWorkerApi();
-    this.buffer = null;
     this.prefix = null;
     return new Promise((resolve) => {
       this.addEventListener('message', e => {
-        if (e.data.buffer) {
-          this.buffer = e.data.buffer;
+        if (e.data.type === 'start') {
           this.prefix = e.data.prefix;
-          this.key = new Int32Array(this.buffer, 0, 4);
-          this.len = new Int32Array(this.buffer, 4, 4);
-          this.tlen = new Int32Array(this.buffer, 8, 4);
-          this.offset = new Int32Array(this.buffer, 12, 4);
-          this.storage = new Uint8Array(this.buffer, 16);
-        }
-        if (this.buffer) {
-          this.postMessage({type: 'ping'});
           resolve();
+        }
+        if (e.data.type === 'call') {
+          const result = this.pyodide.call(e.data.name, e.data.args);
+          this.write(result?.toJs({dict_converter: Object.fromEntries}));
         }
       });
     });
   }
 
-  read() {
-    let tresult = null;
-    while (true) {
-      const result = Atomics.wait(this.key, 0, 0);
-      const ll = this.len[0];
-      const offset = this.offset[0];
-      const tlen = this.tlen[0];
-      const done = offset + ll === tlen;
-      tresult = tresult || new ArrayBuffer(tlen);
-      const dsti = new Uint8Array(tresult, offset);
-      const srci = this.storage.subarray(0, ll);
-      dsti.set(srci);
-      Atomics.store(this.key, 0, 0);
-      Atomics.notify(this.key, 0, 1);
-      this.postMessage({type: 'ping'});
-      if (done) {
-        return tresult;
-      }
-    }
-  }
-
   write(data) {
     this.postMessage({type: 'data', data: data});
-  }
-
-  delay(t) {
-    this.AB = this.AB || new Int32Array(new SharedArrayBuffer(4));
-    Atomics.wait(this.AB, 0, 0, Math.max(1, t|0));
   }
 
   _getWorkerApi() {
@@ -162,27 +153,14 @@ class InsideWorkerWithBlockingStream {
       this.addEventListener = (typ, cb) => addEventListener(typ, cb);
       this.postMessage = (data) => postMessage(data);
     }
-    // Lack of Blob may result in a message on console.log that hurts us.
-    if (!globalThis.Blob) {
-      globalThis.Blob = String;
-      this.addedBlob = true;
-    }
-  }  
+  }
 }
 
 async function main() {
   const pyodide = new Pyodide();
-  const worker = new InsideWorkerWithBlockingStream();
+  const worker = new InsideWorkerWithBlockingStream(pyodide);
   await worker.start();
-  const sender = (data) => {
-    worker.write(data);
-  };
-  const receiver = () => {
-    const result = worker.read();
-    return result;
-  }
-  
-  await pyodide.start(worker.prefix, sender, receiver);
+  await pyodide.start(worker.prefix);
   await pyodide.loadPackages();
   pyodide.check();
   try {
@@ -191,6 +169,7 @@ async function main() {
     console.error("Error!");
     throw e;
   }
+  await postMessage({ type: 'ping' });
 }
 
 main().catch(e => console.error(e));

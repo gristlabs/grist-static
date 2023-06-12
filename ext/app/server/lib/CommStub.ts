@@ -5,6 +5,7 @@ import {GristServerAPI} from 'app/common/GristServerAPI';
 import gristy from 'app/server/Doc';
 
 import {Events as BackboneEvents} from 'backbone';
+import { createDummyTelemetry } from 'app/server/lib/GristServer';
 
 export class Comm  extends dispose.Disposable implements GristServerAPI, DocListAPI {
   // methods defined by GristServerAPI
@@ -68,7 +69,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     const dsm = new gristy.FakeDocStorageManager();
     const gs = {
       create: gristy.create,
-      getTelemetryManager() { return undefined; },
+      getTelemetry() { return createDummyTelemetry(); },
     };
     this.dm = new gristy.DocManager(dsm as any, null, null, gs as any);
     this.ad = new gristy.ActiveDoc(this.dm, 'meep');
