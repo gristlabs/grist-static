@@ -52,24 +52,19 @@ base.resolve.fallback = {
   "react-native-sqlite-storage": false,
 };
 
-base.output = {
-  ...base.output,
-  library: 'gristy',
-  libraryTarget: 'window',
-  libraryExport: 'default',
-};
-
-base.module.rules.unshift({
-  test: /py\.js$/,
-  type: 'asset'
-});
-
 const webworker = {
   ...base,
   target: 'webworker',
   entry: {
     webworker: 'app/pipe/webworker',
   },
+};
+
+base.output = {
+  ...base.output,
+  library: 'gristy',
+  libraryTarget: 'window',
+  libraryExport: 'default',
 };
 
 module.exports = [base, webworker];
