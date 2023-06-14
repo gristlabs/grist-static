@@ -7,14 +7,8 @@ import {convertFromColumn} from 'app/common/ValueConverter';
 class Pyodide {
   async start(prefix) {
     this.prefix = prefix;
-    if (typeof importScripts === 'function') {
-      importScripts(this.prefix + 'pyodide/pyodide.js');
-      this.myLoadPyodide = loadPyodide;
-    } else {
-      const pyo = require('pyodide/pyodide.js');
-      this.myLoadPyodide = pyo.loadPyodide;
-    }
-    this.pyodide = await this.myLoadPyodide({
+    importScripts(this.prefix + 'pyodide/pyodide.js');
+    this.pyodide = await loadPyodide({
       jsglobals: {
         Object: {},
         callExternal: function (name, args) {
