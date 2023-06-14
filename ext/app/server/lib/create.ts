@@ -5,32 +5,16 @@ import { Mutex } from 'async-mutex';
 
 class OutsideWorkerWithBlockingStream {
   private worker: Worker;
-  private readingCb: any;
-  private reading: any;
   private mutex = new Mutex();
 
-  start(fname: string) {
-    this.worker = new Worker(fname);
-    this._prepRead();
-
-    this.worker.onmessage = (e => {
-      if (e.data.type === 'data') {
-        this.readingCb(e.data.data);
-        this._prepRead();
-      } else {
-        console.error('Unexpected message ignored', e.data);
-      }
-    });
+  constructor(url: string) {
+    this.worker = new Worker(url);
   }
 
   close() {
     this.worker.terminate();
   }
   
-  read() {
-    return this.reading;
-  }
-
   async call(name: string, ...args: any[]) {
     const unlock = await this.mutex.acquire();
     try {
@@ -39,16 +23,20 @@ class OutsideWorkerWithBlockingStream {
         name,
         args,
       });
-      return await this.read();
+      return await new Promise((resolve) => {
+        const listener = ((e: MessageEvent) => {
+          if (e.data.type === 'data') {
+            this.worker.removeEventListener('message', listener);
+            resolve(e.data.data);
+          } else {
+            console.error('Unexpected message ignored', e.data);
+          }
+        });
+        this.worker.addEventListener('message', listener);
+      });
     } finally {
       unlock();
     }
-  }
-
-  _prepRead() {
-    this.reading = new Promise((resolve) => {
-      this.readingCb = resolve;
-    });
   }
 }
 
@@ -71,11 +59,10 @@ class PyodideSandbox implements ISandbox {
   private worker: OutsideWorkerWithBlockingStream;
 
   constructor() {
-    this.worker = new OutsideWorkerWithBlockingStream();
     const base = document.querySelector('base');
     const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href));
     const url = getWorkerURL(prefix.href);
-    this.worker.start(url);
+    this.worker = new OutsideWorkerWithBlockingStream(url);
   }
 
   async shutdown() {
