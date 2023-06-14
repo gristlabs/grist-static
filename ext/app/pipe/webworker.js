@@ -74,15 +74,13 @@ sys.version
 
   def call(name, args):
     return sandbox._functions[name](*args.to_py())
-    
-  main.call = call
 
   main.main()
 `);
   }
 
   call(name, args) {
-    return this.pyodide.pyimport("main").call(name, args);
+    return this.pyodide.globals.get("call")(name, args);
   }
 }
 
