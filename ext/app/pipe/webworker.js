@@ -4,31 +4,21 @@
 import {guessColInfo} from 'app/common/ValueGuesser';
 import {convertFromColumn} from 'app/common/ValueConverter';
 
+// Add to self to make this accessible within Python as js.callExternal
+self.callExternal = (name, args) => {
+  const func = {
+    guessColInfo,
+    convertFromColumn
+  }[name];
+  args = args.toJs({ dict_converter: Object.fromEntries });
+  return func(...args);
+}
+
 class Pyodide {
   async start(prefix) {
     this.prefix = prefix;
     importScripts(this.prefix + 'pyodide/pyodide.js');
-    this.pyodide = await loadPyodide({
-      jsglobals: {
-        Object: {},
-        callExternal: function (name, args) {
-          const func = {
-            guessColInfo,
-            convertFromColumn
-          }[name];
-          args = args.toJs({dict_converter: Object.fromEntries});
-          return func(...args);
-        },
-        setTimeout: function (code, delay) {
-          if (self.adminMode) {
-            setTimeout(code, delay);
-            // Seems to be OK not to return anything, so we don't.
-          } else {
-            throw new Error('setTimeout not available');
-          }
-        },
-      }
-    });
+    this.pyodide = await loadPyodide();
   }
 
   check() {
