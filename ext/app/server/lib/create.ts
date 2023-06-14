@@ -5,21 +5,16 @@ import { Mutex } from 'async-mutex';
 
 class OutsideWorkerWithBlockingStream {
   private worker: Worker;
-  private pingingCb: any;
   private readingCb: any;
   private reading: any;
-  private pinging: any;
   private mutex = new Mutex();
 
   start(fname: string) {
     this.worker = new Worker(fname);
     this._prepRead();
-    this._prepPing();
 
     this.worker.onmessage = (e => {
-      if (e.data.type === 'ping') {
-        this.pingingCb(e.data);
-      } else if (e.data.type === 'data') {
+      if (e.data.type === 'data') {
         this.readingCb(e.data.data);
         this._prepRead();
       } else {
@@ -37,7 +32,6 @@ class OutsideWorkerWithBlockingStream {
   }
 
   async call(name: string, ...args: any[]) {
-    await this._waitPing();
     const unlock = await this.mutex.acquire();
     try {
       this.worker.postMessage({
@@ -51,19 +45,9 @@ class OutsideWorkerWithBlockingStream {
     }
   }
 
-  async _waitPing() {
-    await this.pinging;
-  }
-
   _prepRead() {
     this.reading = new Promise((resolve) => {
       this.readingCb = resolve;
-    });
-  }
-
-  _prepPing() {
-    this.pinging = new Promise((resolve) => {
-      this.pingingCb = resolve;
     });
   }
 }
