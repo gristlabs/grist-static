@@ -16,20 +16,13 @@ self.callExternal = (name, args) => {
 
 class Pyodide {
   async start(prefix) {
-    this.prefix = prefix;
-    importScripts(this.prefix + 'pyodide/pyodide.js');
+    importScripts(prefix + 'pyodide/pyodide.js');
     this.pyodide = await loadPyodide();
-  }
-
-  check() {
     console.log(this.pyodide.runPython(`
 import sys
 sys.version
   `));
-  }
-
-  async loadPackages() {
-    const lst = [
+    const packages = [
       "packages/astroid-2.14.2-py3-none-any.whl",
       "packages/asttokens-2.0.5-py2.py3-none-any.whl",
       "packages/backports.functools_lru_cache-1.6.4-py2.py3-none-any.whl",
@@ -57,11 +50,8 @@ sys.version
       "packages/grist-1.0-py3-none-any.whl"
     ];
     await this.pyodide.loadPackage(
-      lst.map(l => this.prefix + l)
+      packages.map(l => prefix + l)
     );
-  }
-
-  run() {
     this.pyodide.runPython(`
   import sys
   sys.path.append('/lib/python3.9/site-packages/grist/')
@@ -145,14 +135,6 @@ async function main() {
   const worker = new InsideWorkerWithBlockingStream(pyodide);
   await worker.start();
   await pyodide.start(worker.prefix);
-  await pyodide.loadPackages();
-  pyodide.check();
-  try {
-    pyodide.run();
-  } catch (e) {
-    console.error("Error!");
-    throw e;
-  }
   await postMessage({ type: 'ping' });
 }
 
