@@ -15,8 +15,8 @@ self.callExternal = (name, args) => {
 }
 
 class Pyodide {
-  async start(prefix) {
-    importScripts(prefix + 'pyodide/pyodide.js');
+  async start() {
+    importScripts(self.urlPrefix + 'pyodide/pyodide.js');
     this.pyodide = await loadPyodide();
     console.log(this.pyodide.runPython(`
 import sys
@@ -50,7 +50,7 @@ sys.version
       "packages/grist-1.0-py3-none-any.whl"
     ];
     await this.pyodide.loadPackage(
-      packages.map(l => prefix + l)
+      packages.map(l => self.urlPrefix + l)
     );
     this.pyodide.runPython(`
   import sys
@@ -85,24 +85,19 @@ sys.version
 }
 
 function start(pyodide) {
-  return new Promise((resolve) => {
-    addEventListener('message', e => {
-      if (e.data.type === 'start') {
-        resolve(e.data.prefix);
-      }
-      if (e.data.type === 'call') {
-        const result = pyodide.call(e.data.name, e.data.args);
-        const data = result?.toJs({ dict_converter: Object.fromEntries });
-        postMessage({ type: 'data', data });
-      }
-    });
+  addEventListener('message', e => {
+    if (e.data.type === 'call') {
+      const result = pyodide.call(e.data.name, e.data.args);
+      const data = result?.toJs({ dict_converter: Object.fromEntries });
+      postMessage({ type: 'data', data });
+    }
   });
 }
 
 async function main() {
   const pyodide = new Pyodide();
-  const prefix = await start(pyodide);
-  await pyodide.start(prefix);
+  start(pyodide);
+  await pyodide.start();
   await postMessage({ type: 'ping' });
 }
 
