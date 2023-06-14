@@ -4,9 +4,7 @@ import { ISandboxCreationOptions, ISandbox } from 'app/server/lib/ISandbox';
 import { Mutex } from 'async-mutex';
 
 class OutsideWorkerWithBlockingStream {
-  private worker: any;
-  private Worker: any;
-  private workerOnMessage: any;
+  private worker: Worker;
   private pingingCb: any;
   private readingCb: any;
   private reading: any;
@@ -15,13 +13,12 @@ class OutsideWorkerWithBlockingStream {
   private mutex = new Mutex();
 
   start(fname: string | URL, prefix: string) {
-    this._getWorkerApi();
-    this.worker = new this.Worker(fname);
+    this.worker = new Worker(fname);
     this.prefix = prefix;
     this._prepRead();
     this._prepPing();
 
-    this.workerOnMessage(this.worker, (e: any) => {
+    this.worker.onmessage = (e => {
       if (e.data.type === 'ping') {
         this.pingingCb(e.data);
       } else if (e.data.type === 'data') {
@@ -74,25 +71,6 @@ class OutsideWorkerWithBlockingStream {
     this.pinging = new Promise((resolve) => {
       this.pingingCb = resolve;
     });
-  }
-
-  _getWorkerApi() {
-    if (typeof Worker === 'undefined') {
-      const wt = require('worker_threads');
-      this.Worker = wt.Worker;
-      this.workerOnMessage = (worker: any, cb: any) => {
-        worker.on('message', (d: any) => {
-          cb({
-            data: d,
-          });
-        });
-      }
-    } else {
-      this.Worker = Worker;
-      this.workerOnMessage = (worker: any, cb: any) => {
-        worker.onmessage = cb;
-      }
-    }
   }
 }
 
