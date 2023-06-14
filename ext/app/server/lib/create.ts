@@ -3,50 +3,19 @@ import { SqliteJsVariant } from 'app/server/lib/SqliteJs';
 import { ISandboxCreationOptions, ISandbox } from 'app/server/lib/ISandbox';
 import { Mutex } from 'async-mutex';
 
-class OutsideWorkerWithBlockingStream {
-  private worker: any;
-  private Worker: any;
-  private workerOnMessage: any;
-  private pingingCb: any;
-  private readingCb: any;
-  private reading: any;
-  private pinging: any;
-  private prefix: string;
+class WorkerWrapper {
+  private worker: Worker;
   private mutex = new Mutex();
 
-  start(fname: string | URL, prefix: string) {
-    this._getWorkerApi();
-    this.worker = new this.Worker(fname);
-    this.prefix = prefix;
-    this._prepRead();
-    this._prepPing();
-
-    this.workerOnMessage(this.worker, (e: any) => {
-      if (e.data.type === 'ping') {
-        this.pingingCb(e.data);
-      } else if (e.data.type === 'data') {
-        this.readingCb(e.data.data);
-        this._prepRead();
-      } else {
-        console.error('Unexpected message ignored', e.data);
-      }
-    });
-    this.worker.postMessage({
-      type: 'start',
-      prefix: this.prefix,
-    });
+  constructor(url: string) {
+    this.worker = new Worker(url);
   }
 
   close() {
     this.worker.terminate();
   }
   
-  read() {
-    return this.reading;
-  }
-
   async call(name: string, ...args: any[]) {
-    await this._waitPing();
     const unlock = await this.mutex.acquire();
     try {
       this.worker.postMessage({
@@ -54,75 +23,54 @@ class OutsideWorkerWithBlockingStream {
         name,
         args,
       });
-      return await this.read();
+      return await new Promise((resolve) => {
+        const listener = ((e: MessageEvent) => {
+          if (e.data.type === 'data') {
+            this.worker.removeEventListener('message', listener);
+            resolve(e.data.data);
+          } else {
+            console.error('Unexpected message ignored', e.data);
+          }
+        });
+        this.worker.addEventListener('message', listener);
+      });
     } finally {
       unlock();
-    }
-  }
-
-  async _waitPing() {
-    await this.pinging;
-  }
-
-  _prepRead() {
-    this.reading = new Promise((resolve) => {
-      this.readingCb = resolve;
-    });
-  }
-
-  _prepPing() {
-    this.pinging = new Promise((resolve) => {
-      this.pingingCb = resolve;
-    });
-  }
-
-  _getWorkerApi() {
-    if (typeof Worker === 'undefined') {
-      const wt = require('worker_threads');
-      this.Worker = wt.Worker;
-      this.workerOnMessage = (worker: any, cb: any) => {
-        worker.on('message', (d: any) => {
-          cb({
-            data: d,
-          });
-        });
-      }
-    } else {
-      this.Worker = Worker;
-      this.workerOnMessage = (worker: any, cb: any) => {
-        worker.onmessage = cb;
-      }
     }
   }
 }
 
 // Returns a blob:// URL which points
 // to a javascript file which will call
-// importScripts with the given URL
-// Copied from https://stackoverflow.com/a/62914052/2482744
+// importScripts with the URL of the actual worker code.
+// Based on https://stackoverflow.com/a/62914052/2482744
 // Used to avoid CORS errors when loading worker.
-function getWorkerURL(url: string) {
-  const content = `importScripts("${url}");`;
+// Also allows directly injecting urlPrefix instead of
+// posting it in a message.
+function getWorkerURL(urlPrefix: string) {
+  const content = `
+self.urlPrefix = "${urlPrefix}pipe/";
+importScripts("${urlPrefix}webworker.bundle.js");
+`;
   return URL.createObjectURL(new Blob([content], { type: "text/javascript" }));
 }
 
 class PyodideSandbox implements ISandbox {
-  private worker: OutsideWorkerWithBlockingStream;
+  private workerWrapper: WorkerWrapper;
 
   constructor() {
-    this.worker = new OutsideWorkerWithBlockingStream();
     const base = document.querySelector('base');
     const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href));
-    const url = getWorkerURL(prefix.href + 'webworker.bundle.js');
-    this.worker.start(url, prefix.href + 'pipe/');
+    const url = getWorkerURL(prefix.href);
+    this.workerWrapper = new WorkerWrapper(url);
   }
 
   async shutdown() {
-    this.worker.close();
+    this.workerWrapper.close();
   }
 
   async pyCall(funcName: string, ...varArgs: unknown[]) {
-    return await this.worker.call(funcName, ...varArgs);
+    return await this.workerWrapper.call(funcName, ...varArgs);
   }
 
   async reportMemoryUsage() {
