@@ -91,10 +91,9 @@ class InsideWorkerWithBlockingStream {
   }
 
   async start() {
-    this._getWorkerApi();
     this.prefix = null;
     return new Promise((resolve) => {
-      this.addEventListener('message', e => {
+      addEventListener('message', e => {
         if (e.data.type === 'start') {
           this.prefix = e.data.prefix;
           resolve();
@@ -108,23 +107,7 @@ class InsideWorkerWithBlockingStream {
   }
 
   write(data) {
-    this.postMessage({type: 'data', data: data});
-  }
-
-  _getWorkerApi() {
-    if (typeof addEventListener === 'undefined') {
-      const wt = require('worker_threads');
-      this.postMessage = (data) => {
-        wt.parentPort.postMessage(data);
-      };
-      this.addEventListener = (type, cb) => {
-        wt.parentPort.addEventListener(type, cb);
-        wt.parentPort.start();
-      }
-    } else {
-      this.addEventListener = (typ, cb) => addEventListener(typ, cb);
-      this.postMessage = (data) => postMessage(data);
-    }
+    postMessage({type: 'data', data: data});
   }
 }
 
