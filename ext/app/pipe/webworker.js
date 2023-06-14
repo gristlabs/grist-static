@@ -84,38 +84,25 @@ sys.version
   }
 }
 
-
-class InsideWorkerWithBlockingStream {
-  constructor(pyodide) {
-    this.pyodide = pyodide;
-  }
-
-  async start() {
-    this.prefix = null;
-    return new Promise((resolve) => {
-      addEventListener('message', e => {
-        if (e.data.type === 'start') {
-          this.prefix = e.data.prefix;
-          resolve();
-        }
-        if (e.data.type === 'call') {
-          const result = this.pyodide.call(e.data.name, e.data.args);
-          this.write(result?.toJs({dict_converter: Object.fromEntries}));
-        }
-      });
+function start(pyodide) {
+  return new Promise((resolve) => {
+    addEventListener('message', e => {
+      if (e.data.type === 'start') {
+        resolve(e.data.prefix);
+      }
+      if (e.data.type === 'call') {
+        const result = pyodide.call(e.data.name, e.data.args);
+        const data = result?.toJs({ dict_converter: Object.fromEntries });
+        postMessage({ type: 'data', data });
+      }
     });
-  }
-
-  write(data) {
-    postMessage({type: 'data', data: data});
-  }
+  });
 }
 
 async function main() {
   const pyodide = new Pyodide();
-  const worker = new InsideWorkerWithBlockingStream(pyodide);
-  await worker.start();
-  await pyodide.start(worker.prefix);
+  const prefix = await start(pyodide);
+  await pyodide.start(prefix);
   await postMessage({ type: 'ping' });
 }
 
