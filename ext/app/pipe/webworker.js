@@ -4,48 +4,25 @@
 import {guessColInfo} from 'app/common/ValueGuesser';
 import {convertFromColumn} from 'app/common/ValueConverter';
 
+// Add to self to make this accessible within Python as js.callExternal
+self.callExternal = (name, args) => {
+  const func = {
+    guessColInfo,
+    convertFromColumn
+  }[name];
+  args = args.toJs({ dict_converter: Object.fromEntries });
+  return func(...args);
+}
+
 class Pyodide {
   async start(prefix) {
-    this.prefix = prefix;
-    if (typeof importScripts === 'function') {
-      importScripts(this.prefix + 'pyodide/pyodide.js');
-      this.myLoadPyodide = loadPyodide;
-    } else {
-      const pyo = require('pyodide/pyodide.js');
-      this.myLoadPyodide = pyo.loadPyodide;
-    }
-    this.pyodide = await this.myLoadPyodide({
-      jsglobals: {
-        Object: {},
-        callExternal: function (name, args) {
-          const func = {
-            guessColInfo,
-            convertFromColumn
-          }[name];
-          args = args.toJs({dict_converter: Object.fromEntries});
-          return func(...args);
-        },
-        setTimeout: function (code, delay) {
-          if (self.adminMode) {
-            setTimeout(code, delay);
-            // Seems to be OK not to return anything, so we don't.
-          } else {
-            throw new Error('setTimeout not available');
-          }
-        },
-      }
-    });
-  }
-
-  check() {
+    importScripts(prefix + 'pyodide/pyodide.js');
+    this.pyodide = await loadPyodide();
     console.log(this.pyodide.runPython(`
 import sys
 sys.version
   `));
-  }
-
-  async loadPackages() {
-    const lst = [
+    const packages = [
       "packages/astroid-2.14.2-py3-none-any.whl",
       "packages/asttokens-2.0.5-py2.py3-none-any.whl",
       "packages/backports.functools_lru_cache-1.6.4-py2.py3-none-any.whl",
@@ -73,11 +50,8 @@ sys.version
       "packages/grist-1.0-py3-none-any.whl"
     ];
     await this.pyodide.loadPackage(
-      lst.map(l => this.prefix + l)
+      packages.map(l => prefix + l)
     );
-  }
-
-  run() {
     this.pyodide.runPython(`
   import sys
   sys.path.append('/lib/python3.9/site-packages/grist/')
@@ -100,75 +74,35 @@ sys.version
 
   def call(name, args):
     return sandbox._functions[name](*args.to_py())
-    
-  main.call = call
 
   main.main()
 `);
   }
 
   call(name, args) {
-    return this.pyodide.pyimport("main").call(name, args);
+    return this.pyodide.globals.get("call")(name, args);
   }
 }
 
-
-class InsideWorkerWithBlockingStream {
-  constructor(pyodide) {
-    this.pyodide = pyodide;
-  }
-
-  async start() {
-    this._getWorkerApi();
-    this.prefix = null;
-    return new Promise((resolve) => {
-      this.addEventListener('message', e => {
-        if (e.data.type === 'start') {
-          this.prefix = e.data.prefix;
-          resolve();
-        }
-        if (e.data.type === 'call') {
-          const result = this.pyodide.call(e.data.name, e.data.args);
-          this.write(result?.toJs({dict_converter: Object.fromEntries}));
-        }
-      });
-    });
-  }
-
-  write(data) {
-    this.postMessage({type: 'data', data: data});
-  }
-
-  _getWorkerApi() {
-    if (typeof addEventListener === 'undefined') {
-      const wt = require('worker_threads');
-      this.postMessage = (data) => {
-        wt.parentPort.postMessage(data);
-      };
-      this.addEventListener = (type, cb) => {
-        wt.parentPort.addEventListener(type, cb);
-        wt.parentPort.start();
+function start(pyodide) {
+  return new Promise((resolve) => {
+    addEventListener('message', e => {
+      if (e.data.type === 'start') {
+        resolve(e.data.prefix);
       }
-    } else {
-      this.addEventListener = (typ, cb) => addEventListener(typ, cb);
-      this.postMessage = (data) => postMessage(data);
-    }
-  }
+      if (e.data.type === 'call') {
+        const result = pyodide.call(e.data.name, e.data.args);
+        const data = result?.toJs({ dict_converter: Object.fromEntries });
+        postMessage({ type: 'data', data });
+      }
+    });
+  });
 }
 
 async function main() {
   const pyodide = new Pyodide();
-  const worker = new InsideWorkerWithBlockingStream(pyodide);
-  await worker.start();
-  await pyodide.start(worker.prefix);
-  await pyodide.loadPackages();
-  pyodide.check();
-  try {
-    pyodide.run();
-  } catch (e) {
-    console.error("Error!");
-    throw e;
-  }
+  const prefix = await start(pyodide);
+  await pyodide.start(prefix);
   await postMessage({ type: 'ping' });
 }
 

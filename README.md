@@ -65,9 +65,6 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
  * Very immature, some features not yet ported, such as:
    - Attachments
 	 - Should be doable (e.g. via service worker)
-   - Custom widgets
-	 - These work now on Chrome (using `credentialless`)
-	 - For other browsers, custom widget must be pulled from a site with certain headers set, OR stored and served alongside the document
    - Importing and exporting
      - Again, doable, just "different"
    - Data size measurement
