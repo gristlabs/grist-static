@@ -3,7 +3,7 @@ import { SqliteJsVariant } from 'app/server/lib/SqliteJs';
 import { ISandboxCreationOptions, ISandbox } from 'app/server/lib/ISandbox';
 import { Mutex } from 'async-mutex';
 
-class OutsideWorkerWithBlockingStream {
+class WorkerWrapper {
   private worker: Worker;
   private mutex = new Mutex();
 
@@ -56,21 +56,21 @@ importScripts("${urlPrefix}webworker.bundle.js");
 }
 
 class PyodideSandbox implements ISandbox {
-  private worker: OutsideWorkerWithBlockingStream;
+  private workerWrapper: WorkerWrapper;
 
   constructor() {
     const base = document.querySelector('base');
     const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href));
     const url = getWorkerURL(prefix.href);
-    this.worker = new OutsideWorkerWithBlockingStream(url);
+    this.workerWrapper = new WorkerWrapper(url);
   }
 
   async shutdown() {
-    this.worker.close();
+    this.workerWrapper.close();
   }
 
   async pyCall(funcName: string, ...varArgs: unknown[]) {
-    return await this.worker.call(funcName, ...varArgs);
+    return await this.workerWrapper.call(funcName, ...varArgs);
   }
 
   async reportMemoryUsage() {
