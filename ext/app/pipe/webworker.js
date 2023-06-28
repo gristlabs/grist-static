@@ -83,8 +83,10 @@ function start(pyodidePromise) {
   addEventListener('message', async (e) => {
     if (e.data.type === 'call') {
       const { name, args } = e.data;
-      const result = (await pyodidePromise).globals.get("call")(name, args);
-      const data = result?.toJs({ dict_converter: Object.fromEntries });
+      let data = (await pyodidePromise).globals.get("call")(name, args);
+      if (data?.toJs) {
+        data = data.toJs({ dict_converter: Object.fromEntries });
+      }
       postMessage({ type: 'data', data });
     }
   });
