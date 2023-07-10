@@ -143,6 +143,33 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       addDocSession: () => this.session
     }, {});
     (window as any).ad = this.ad;
+
+    const initialDataUrl = (window as any).initialData;
+    if (initialDataUrl) {
+      const content = await (await fetch(initialDataUrl)).text();
+      // Extract filename from end of URL
+      const originalFilename = initialDataUrl.match(/[^/]+$/)[0];
+      const path = "/tmp/data.csv";
+      const parseOptions = {};
+      await this.ad._pyCall("save_file", path, content);
+      const parsedFile = await this.ad._pyCall(
+        "csv_parser.parseFile",
+        {path, origName: originalFilename},
+        parseOptions,
+      );
+      const importOptions = {
+        parseOptions,
+        mergeOptionsMap: {},
+        isHidden: false,
+        originalFilename,
+        uploadFileIndex: 0,
+        transformRuleMap: {},
+      };
+      await this.ad._activeDocImport._importParsedFileAsNewTable(
+        this.session, parsedFile, importOptions
+      )
+    }
+
     return {
       docFD: 1,
       clientId: 'one-and-only',

@@ -65,6 +65,13 @@ os.environ['IMPORTDIR'] = '/import'
 sandbox = sandbox_mod.default_sandbox = sandbox_mod.Sandbox(None, None)
 sandbox.run = lambda: print("Sandbox is running")
 
+def save_file(path, content):
+  with open(path, 'w') as f:
+    f.write(content)
+
+sandbox.register('save_file', save_file)
+
+
 def call_external(name, *args):
   result = js.callExternal(name, args)
   return result.to_py()
