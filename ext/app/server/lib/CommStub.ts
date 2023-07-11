@@ -76,9 +76,10 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     (window as any).gristActiveDoc = this.ad;
     //await this.ad.createEmptyDoc({});
     const hasSeed = (window as any).seedFile;
+    const initialDataUrl = (window as any).initialData;
     await this.ad.loadDoc({mode: 'system'}, {
       forceNew: !hasSeed,
-      skipInitialTable: hasSeed,
+      skipInitialTable: hasSeed || initialDataUrl,
       useExisting: true,
     });
     this.client = {
@@ -144,7 +145,6 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     }, {});
     (window as any).ad = this.ad;
 
-    const initialDataUrl = (window as any).initialData;
     if (initialDataUrl) {
       const content = await (await fetch(initialDataUrl)).text();
       // Extract filename from end of URL
