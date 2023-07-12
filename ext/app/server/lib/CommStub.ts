@@ -165,7 +165,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
         uploadFileIndex: 0,
         transformRuleMap: {},
       };
-      await this.ad._activeDocImport._importParsedFileAsNewTable(
+      await this.ad.importParsedFileAsNewTable(
         this.session, parsedFile, importOptions
       )
     }
