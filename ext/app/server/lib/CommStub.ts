@@ -76,9 +76,10 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     (window as any).gristActiveDoc = this.ad;
     //await this.ad.createEmptyDoc({});
     const hasSeed = (window as any).seedFile;
+    const initialDataUrl = (window as any).initialData;
     await this.ad.loadDoc({mode: 'system'}, {
       forceNew: !hasSeed,
-      skipInitialTable: hasSeed,
+      skipInitialTable: hasSeed || initialDataUrl,
       useExisting: true,
     });
     this.client = {
@@ -143,6 +144,11 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       addDocSession: () => this.session
     }, {});
     (window as any).ad = this.ad;
+
+    if (initialDataUrl) {
+      await this._loadInitialData(initialDataUrl);
+    }
+
     return {
       docFD: 1,
       clientId: 'one-and-only',
@@ -157,6 +163,31 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
   public getDocWorkerUrl(docId: string|null): string {
     return window.location.href;
+  }
+
+  private async _loadInitialData(initialDataUrl: string) {
+    const content = await (await fetch(initialDataUrl)).text();
+    // Extract filename from end of URL
+    const originalFilename = initialDataUrl.match(/[^/]+$/)?.[0] || "data.csv";
+    const path = "/tmp/data.csv";
+    const parseOptions = {};
+    await this.ad._pyCall("save_file", path, content);
+    const parsedFile = await this.ad._pyCall(
+      "csv_parser.parseFile",
+      {path, origName: originalFilename},
+      parseOptions,
+    );
+    const importOptions = {
+      parseOptions,
+      mergeOptionsMap: {},
+      isHidden: false,
+      originalFilename,
+      uploadFileIndex: 0,
+      transformRuleMap: {},
+    };
+    await this.ad.importParsedFileAsNewTable(
+      this.session, parsedFile, importOptions
+    )
   }
 
   private _wrapMethod<Name extends keyof GristServerAPI>(name: Name): GristServerAPI[Name] {

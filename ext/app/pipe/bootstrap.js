@@ -15,6 +15,9 @@ function bootstrapGrist(options) {
   if (seedFile) {
     window.seedFile = new URL(seedFile, window.location.href);
   }
+  if (options.initialData) {
+    window.initialData = options.initialData;
+  }
   const fakeDocId = "new~2d6rcxHotohxAuTxttFRzU";
   const fakeUrl = "https://example.com/o/docs/doc/new~2d6rcxHotohxAuTxttFRzU";
   window.fakeUrl = fakeUrl;
