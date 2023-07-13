@@ -146,28 +146,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     (window as any).ad = this.ad;
 
     if (initialDataUrl) {
-      const content = await (await fetch(initialDataUrl)).text();
-      // Extract filename from end of URL
-      const originalFilename = initialDataUrl.match(/[^/]+$/)[0];
-      const path = "/tmp/data.csv";
-      const parseOptions = {};
-      await this.ad._pyCall("save_file", path, content);
-      const parsedFile = await this.ad._pyCall(
-        "csv_parser.parseFile",
-        {path, origName: originalFilename},
-        parseOptions,
-      );
-      const importOptions = {
-        parseOptions,
-        mergeOptionsMap: {},
-        isHidden: false,
-        originalFilename,
-        uploadFileIndex: 0,
-        transformRuleMap: {},
-      };
-      await this.ad.importParsedFileAsNewTable(
-        this.session, parsedFile, importOptions
-      )
+      await this._loadInitialData(initialDataUrl);
     }
 
     return {
@@ -184,6 +163,31 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
   public getDocWorkerUrl(docId: string|null): string {
     return window.location.href;
+  }
+
+  private async _loadInitialData(initialDataUrl: string) {
+    const content = await (await fetch(initialDataUrl)).text();
+    // Extract filename from end of URL
+    const originalFilename = initialDataUrl.match(/[^/]+$/)?.[0] || "data.csv";
+    const path = "/tmp/data.csv";
+    const parseOptions = {};
+    await this.ad._pyCall("save_file", path, content);
+    const parsedFile = await this.ad._pyCall(
+      "csv_parser.parseFile",
+      {path, origName: originalFilename},
+      parseOptions,
+    );
+    const importOptions = {
+      parseOptions,
+      mergeOptionsMap: {},
+      isHidden: false,
+      originalFilename,
+      uploadFileIndex: 0,
+      transformRuleMap: {},
+    };
+    await this.ad.importParsedFileAsNewTable(
+      this.session, parsedFile, importOptions
+    )
   }
 
   private _wrapMethod<Name extends keyof GristServerAPI>(name: Name): GristServerAPI[Name] {
