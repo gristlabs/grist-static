@@ -56,6 +56,7 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
 
   * I've been pushing Grist code to https://grist-static.com/ as a CDN; you can produce it all yourself using this repo.
   * After that, it is just a case of putting a `.grist` file on your server beside this `.html` file, and filing in the options to `bootstrapGrist`.
+  * You can also pass `initialData: 'path/to/data.csv'` to import a CSV file into a new table. In this case `initialFile` is optional.
 
 ## Differences with regular Grist
 
