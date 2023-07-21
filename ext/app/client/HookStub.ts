@@ -1,5 +1,6 @@
-import {defaultHooks, IHooks} from 'app/client/DefaultHooks';
+import { defaultHooks, IHooks } from 'app/client/DefaultHooks';
 import { IGristUrlState } from 'app/common/gristUrls';
+import { gristOverrides } from 'app/pipe/GristOverrides';
 
 export const hooks: IHooks = {
   ...defaultHooks,
@@ -7,7 +8,7 @@ export const hooks: IHooks = {
     credentialless: true,
   },
   fetch: fetcher,
-  baseURI: (window as any).bootstrapGristPrefix,
+  baseURI: gristOverrides.bootstrapGristPrefix,
   urlTweaks: {
     postEncode,
     preDecode,
@@ -25,8 +26,8 @@ function fetcher(...args: any[]) {
 function preDecode(options: {
   url: URL,
 }) {
-  console.log("FAKEURL?", (window as any).fakeUrl);
-  if (!(window as any).fakeUrl) {
+  const fakeUrl = gristOverrides.fakeUrl;
+  if (!fakeUrl) {
     return;
   }
   const at = new URL(options.url.href);
@@ -37,7 +38,7 @@ function preDecode(options: {
       extra = `/p/${p}`;
     }
   }
-  const location = new URL((window as any).fakeUrl + (extra || ''));
+  const location = new URL(fakeUrl + (extra || ''));
   location.search = at.search;
   location.hash = at.hash;
   options.url.href = location.href;
@@ -51,7 +52,8 @@ function postEncode(options: {
   baseLocation: Location | URL,
 }): void {
   const {url, parts} = options;
-  if (!(window as any).fakeUrl) {
+  const fakeUrl = gristOverrides.fakeUrl;
+  if (!fakeUrl) {
     return;
   }
   const at = new URL(location.href);

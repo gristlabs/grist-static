@@ -1,7 +1,16 @@
+// Guess at where Grist assets live.
+const settings = window.gristOverrides = {};
 const bootstrapGristSource = document.currentScript?.src;
 const bootstrapGristPrefix = bootstrapGristSource ? new URL('..', bootstrapGristSource).href : '';
-window.bootstrapGristPrefix = bootstrapGristPrefix;
+// This next line should be left alone, there is a release script
+// that fiddles with it when prefix is none.
+settings.bootstrapGristPrefix = bootstrapGristPrefix;
 
+/**
+ * Kickstart Grist. See README for options.
+ * TODO: don't just take over entire page, restrict activities to
+ * within some element.
+ */
 function bootstrapGrist(options) {
   if (!globalThis.setImmediate) {
     // make do
@@ -11,17 +20,17 @@ function bootstrapGrist(options) {
   options = options || {};
   const seedFile = options.initialFile;
   const homeUrl = new URL('.', window.location.href).href;
-  window.staticGristOptions = options;
+  settings.staticGristOptions = options;
   if (seedFile) {
-    window.seedFile = new URL(seedFile, window.location.href);
+    settings.seedFile = new URL(seedFile, window.location.href);
   }
   if (options.initialData) {
-    window.initialData = options.initialData;
+    settings.initialData = options.initialData;
   }
   const fakeDocId = "new~2d6rcxHotohxAuTxttFRzU";
   const fakeUrl = "https://example.com/o/docs/doc/new~2d6rcxHotohxAuTxttFRzU";
-  window.fakeUrl = fakeUrl;
-  window.fakeDocId = fakeDocId;
+  settings.fakeUrl = fakeUrl;
+  settings.fakeDocId = fakeDocId;
   window.gristConfig = {
     "homeUrl":homeUrl,
     "org":"docs",
@@ -41,7 +50,7 @@ function bootstrapGrist(options) {
     "maxUploadSizeImport":null,
     "maxUploadSizeAttachment":null,
     "timestampMs":1678573297305,
-    "enableWidgetRepository":false,
+    "enableWidgetRepository":true,
     "survey":false,
     "tagManagerId":null,
     "activation":{"isManager":false},
@@ -69,7 +78,7 @@ function bootstrapGrist(options) {
     "bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js",
     "main.bundle.js"
   ];
-  const prefix = window.bootstrapGristPrefix || '';
+  const prefix = settings.bootstrapGristPrefix || '';
   for (const src of css) {
     const asset = document.createElement('link');
     asset.setAttribute('rel', 'stylesheet');

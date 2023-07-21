@@ -1,11 +1,13 @@
 import * as dispose from 'app/client/lib/dispose';
-import {DocListAPI, OpenLocalDocResult} from 'app/common/DocListAPI';
-import {GristServerAPI} from 'app/common/GristServerAPI';
+import { DocListAPI, OpenLocalDocResult } from 'app/common/DocListAPI';
+import { GristServerAPI } from 'app/common/GristServerAPI';
+import { gristOverrides } from 'app/pipe/GristOverrides';
 
 import gristy from 'app/server/Doc';
 
-import {Events as BackboneEvents} from 'backbone';
+import { Events as BackboneEvents } from 'backbone';
 import { createDummyTelemetry } from 'app/server/lib/GristServer';
+import { buildWidgetRepository } from 'app/server/lib/WidgetRepository';
 
 export class Comm  extends dispose.Disposable implements GristServerAPI, DocListAPI {
   // methods defined by GristServerAPI
@@ -75,8 +77,8 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     this.ad = new gristy.ActiveDoc(this.dm, 'meep');
     (window as any).gristActiveDoc = this.ad;
     //await this.ad.createEmptyDoc({});
-    const hasSeed = (window as any).seedFile;
-    const initialDataUrl = (window as any).initialData;
+    const hasSeed = gristOverrides.seedFile;
+    const initialDataUrl = gristOverrides.initialData;
     await this.ad.loadDoc({mode: 'system'}, {
       forceNew: !hasSeed,
       skipInitialTable: hasSeed || initialDataUrl,
@@ -310,6 +312,8 @@ const docInfo = {
   "trunkAccess": "owners"
 };
 
+const widgetRepo = buildWidgetRepository();
+
 async function newFetch(target: string, opts: any) {
   console.log('newFetch', { target, opts });
   const url = new URL(target);
@@ -326,7 +330,7 @@ async function newFetch(target: string, opts: any) {
       json: () => accessAll,
     };
   } else if (url.pathname.endsWith('/api/docs/new~2d6rcxHotohxAuTxttFRzU')) {
-    docInfo.name = (window as any).staticGristOptions?.name || docInfo.name;
+    docInfo.name = gristOverrides.staticGristOptions?.name || docInfo.name;
     return {
       status: 200,
       json: () => docInfo,
@@ -364,6 +368,12 @@ async function newFetch(target: string, opts: any) {
     return {
       status: 200,
       json: () => ({}),
+    };
+  } else if (url.pathname.endsWith('/api/widgets')) {
+    const widgets = await widgetRepo.getWidgets();
+    return {
+      status: 200,
+      json: () => widgets,
     };
   }
   return {
