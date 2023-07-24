@@ -14,10 +14,9 @@ import {create} from 'app/server/lib/create';
 
 process.env.GRIST_SANDBOX_FLAVOR = 'pyodideInline';
 
-// Provide a list of custom widgets. This URL is temporary,
-// until https://github.com/gristlabs/grist-widget/pull/52 lands.
+// Provide a default list of custom widgets.
 process.env.GRIST_WIDGET_LIST_URL =
-  'https://paulfitz.github.io/grist-widget/manifest.json';
+  'https://gristlabs.github.io/grist-widget/manifest.json';
 
 ActiveDocDeps.ACTIVEDOC_TIMEOUT_ACTION = 'ignore';
 
