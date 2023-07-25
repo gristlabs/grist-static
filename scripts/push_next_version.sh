@@ -15,6 +15,10 @@ version="experiments/e$n"
 http="https://grist-static.com/$version/"
 s3url="s3://grist-static/$version"
 
+# remove some unnecessary testing stuff that will make sync fail.
+rm -f dist/static/mocha.js dist/static/mocha.css
+# sync
 aws s3 sync dist/static $s3url
+# point to new version
 cat dist/latest.js | sed "s|XXX|'$http'|" > dist/latest-send.js
 aws s3 cp dist/latest-send.js s3://grist-static/next.js --cache-control max-age=60

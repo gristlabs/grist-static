@@ -13,6 +13,11 @@ import {NSandbox} from 'app/server/lib/NSandbox';
 import {create} from 'app/server/lib/create';
 
 process.env.GRIST_SANDBOX_FLAVOR = 'pyodideInline';
+
+// Provide a default list of custom widgets.
+process.env.GRIST_WIDGET_LIST_URL =
+  'https://gristlabs.github.io/grist-widget/manifest.json';
+
 ActiveDocDeps.ACTIVEDOC_TIMEOUT_ACTION = 'ignore';
 
 class FakeDocStorageManager {

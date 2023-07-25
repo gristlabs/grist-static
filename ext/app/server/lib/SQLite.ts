@@ -1,3 +1,4 @@
+import { gristOverrides } from 'app/pipe/GristOverrides';
 import * as SqlJs from 'sql.js';
 import initSqlJs = require('sql.js');
 
@@ -22,18 +23,13 @@ export class Database {
   private db: Promise<SqlJs.Database>;
   constructor(path: string, mode: any, cb: (err: any, v?: any) => void) {
     this.db = new Promise<SqlJs.Database>((resolve, reject) => {
-      console.log("DB", path, mode);
       sql.then(async sql => {
         try {
-          console.log("working with.....", sql);
-          const seedFile = (window as any).seedFile;
-          console.log("Have a seed file?", {seedFile});
+          const seedFile = gristOverrides.seedFile;
           if (seedFile) {
-            console.log("Have a seed file", {seedFile});
             const resp = await window.fetch(seedFile);
             const data = await resp.arrayBuffer();
             const arr = new Uint8Array(data);
-            console.log("Got seed file data", {arr});
             resolve(new sql.Database(arr));
           } else {
             resolve(new sql.Database());
@@ -47,7 +43,6 @@ export class Database {
       });
     });
     this.db.then(d => {
-      console.log("GOT", d);
       cb(null, d);
     });
   }
@@ -77,21 +72,17 @@ export class Database {
       } finally {
         stmt.free();
       }
-      console.log("GET RESULT", {sql, args, result});
       return result;
     }, cb);
   }
   async all(sql: string, ...args: any[]) {
     const cb = args.pop();
-    console.log("all?", {sql, args});
     handleCallback(async () => {
       const result: any[] = [];
       const cb2 = (v: any) => {
-        console.log("got v", v);
         result.push(v);
       }
       (await this.db).each(sql, args, cb2, () => 1);
-      console.log("done");
       return result;
     }, cb);
   }
@@ -117,9 +108,6 @@ export class Statement {
   private stmt: SqlJs.Statement;
   attach(stmt2: any) {
     this.stmt = stmt2;
-  }
-  foo() {
-    console.log(this.stmt);
   }
   bind(...args: any[]) { throw new Error('nope'); }
   reset(...args: any[]) { throw new Error('nope'); }

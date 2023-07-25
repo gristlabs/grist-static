@@ -7,5 +7,6 @@
   ],
   "references": [
     { "path": "../../../app/common" },
+    { "path": "../pipe" },
   ]
 }

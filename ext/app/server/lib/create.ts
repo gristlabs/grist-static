@@ -1,3 +1,4 @@
+import { gristOverrides } from 'app/pipe/GristOverrides';
 import { makeSimpleCreator, ICreate } from 'app/server/lib/ICreate';
 import { SqliteJsVariant } from 'app/server/lib/SqliteJs';
 import { ISandboxCreationOptions, ISandbox } from 'app/server/lib/ISandbox';
@@ -60,7 +61,7 @@ class PyodideSandbox implements ISandbox {
 
   constructor() {
     const base = document.querySelector('base');
-    const prefix = new URL(((window as any).bootstrapGristPrefix || base?.href || window.location.href));
+    const prefix = new URL(gristOverrides.bootstrapGristPrefix || base?.href || window.location.href);
     const url = getWorkerURL(prefix.href);
     this.workerWrapper = new WorkerWrapper(url);
   }

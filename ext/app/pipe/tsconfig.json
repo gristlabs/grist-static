@@ -1,0 +1,6 @@
+{
+  "extends": "../../../buildtools/tsconfig-base-ext.json",
+  "include": [
+    "./GristOverrides.ts",
+  ],
+}

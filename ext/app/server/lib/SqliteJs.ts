@@ -1,5 +1,7 @@
 import * as SqlJs from 'sql.js';
 import initSqlJs = require('sql.js/dist/sql-wasm-debug');
+
+import { gristOverrides } from 'app/pipe/GristOverrides';
 import { allMarshalQuery, gristMarshal, MinDB, PreparedStatement, SqliteVariant } from 'app/server/lib/SqliteCommon';
 import { OpenMode } from 'app/server/lib/SQLiteDB';
 
@@ -21,7 +23,7 @@ async function getSql() {
   return initSqlJs({
     locateFile: file => {
       let target = `static/sql.js/dist/${file}`;
-      const prefix = typeof window !== 'undefined' && (window as any)?.bootstrapGristPrefix;
+      const prefix = typeof window !== 'undefined' && gristOverrides.bootstrapGristPrefix;
       if (prefix) {
         target = `${prefix}sql.js/dist/${file}`
       }
@@ -38,7 +40,7 @@ export class JsDatabase implements MinDB {
     this.db = new Promise<SqlJs.Database>((resolve, reject) => {
       sql.then(async sql => {
         try {
-          const seedFile = path !== ':memory:' ? (window as any).seedFile : '';
+          const seedFile = path !== ':memory:' ? gristOverrides.seedFile : '';
           let seed: Uint8Array|undefined;
           if (seedFile) {
             const resp = await window.fetch(seedFile);
