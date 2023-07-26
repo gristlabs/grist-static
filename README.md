@@ -58,6 +58,7 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
   * After that, it is just a case of putting a `.grist` file on your server beside this `.html` file, and filing in the options to `bootstrapGrist`.
   * You can also pass `initialData: 'path/to/data.csv'` to import a CSV file into a new table. In this case `initialFile` is optional.
   * You can also pass `elementId: 'element-id` to open Grist within an element in your page.
+    - The combination of `elementId` with `initialData`, Firefox, and a `csv` file at a URL that requires cookie-based authentication may not work yet ([bug report](https://bugzilla.mozilla.org/show_bug.cgi?id=1741489)).
   * You can set `light: true` for a less busy, single page layout.
 
 ## Differences with regular Grist
