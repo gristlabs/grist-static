@@ -8,10 +8,61 @@ settings.bootstrapGristPrefix = bootstrapGristPrefix;
 
 /**
  * Kickstart Grist. See README for options.
- * TODO: don't just take over entire page, restrict activities to
- * within some element.
  */
 function bootstrapGrist(options) {
+  const bootstrapGristLocation = options.pageLocation || window.location.href;
+  const bootstrapGristSourceAbsolute = new URL(bootstrapGristSource).href;
+  if (options.elementId) {
+    // Grist should be opened within a page element, and not
+    // take over the entire page.
+    let element = document.getElementById(options.elementId);
+    const iframeElement = document.createElement('iframe');
+
+    // Prepare nested options. Remove element id, and add the page location
+    // (the iframe will have a location like about:srcdoc). Convert the
+    // options into a quoted string - we don't expect hostility from
+    // caller who has full script rights already, but perhaps something
+    // nasty could be snuck into the location?
+    const nestedOptions = {...options};
+    delete nestedOptions.elementId;
+    nestedOptions.pageLocation = bootstrapGristLocation;
+    function escapeJsonForScript(jsonString) {
+      return jsonString.replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/</g, '\\u003C')
+        .replace(/>/g, '\\u003E')
+        .replace(/'/g, '\\u0027')
+        .replace(/&/g, '\\u0026')
+        .replace(/`/g, '\\u0060');
+    }
+    const nestedOptionsStr = escapeJsonForScript(JSON.stringify(nestedOptions));
+
+    // Set up the iframe, and add it to the page.
+    iframeElement.srcdoc = `
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <script src="${bootstrapGristSourceAbsolute}"></script>
+    <title>Grist</title>
+  </head>
+  <body>
+    <script>
+      bootstrapGrist(JSON.parse("${nestedOptionsStr}"));
+    </script>
+  </body>
+</html>
+`;
+    iframeElement.style.width = '100%';
+    iframeElement.style.height = '100%';
+    iframeElement.style.border = 'none';
+    element.innerHTML = '';
+    element.appendChild(iframeElement);
+
+    // And we're done, in the embedded case.
+    return;
+  }
+
   if (!globalThis.setImmediate) {
     // make do
     globalThis.setImmediate = (fn) => setTimeout(fn, 0);
@@ -19,10 +70,10 @@ function bootstrapGrist(options) {
 
   options = options || {};
   const seedFile = options.initialFile;
-  const homeUrl = new URL('.', window.location.href).href;
+  const homeUrl = new URL('.', bootstrapGristLocation).href;
   settings.staticGristOptions = options;
   if (seedFile) {
-    settings.seedFile = new URL(seedFile, window.location.href);
+    settings.seedFile = new URL(seedFile, bootstrapGristLocation);
   }
   if (options.initialData) {
     settings.initialData = options.initialData;
@@ -31,6 +82,9 @@ function bootstrapGrist(options) {
   const fakeUrl = "https://example.com/o/docs/doc/new~2d6rcxHotohxAuTxttFRzU";
   settings.fakeUrl = fakeUrl;
   settings.fakeDocId = fakeDocId;
+  if (options.light) {
+    settings.light = Boolean(options.light);
+  }
   window.gristConfig = {
     "homeUrl":homeUrl,
     "org":"docs",

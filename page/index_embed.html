@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <script src="static/pipe/bootstrap.js"></script>
+
+    <title>Grist, static, within an existing page</title>
+  </head>
+
+  <body>
+
+    <p>
+      Hello we are talking about our thing. Now for some Grist.
+    </p>
+
+    <div id="grist-part1" style="height: 500px; width: 100%; border: 1px solid green">
+    </div>
+    
+    <p>
+      Done. Okay, how about some more Grist.
+    </p>
+
+    <div id="grist-part2" style="height: 500px; width: 100%; border: 1px solid green">
+    </div>
+
+    <p>
+      Finally, load a csv.
+    </p>
+    
+    <div id="grist-part3" style="height: 500px; width: 100%; border: 1px solid green">
+    </div>
+
+    <script>
+      bootstrapGrist({
+        initialFile: 'investment-research.grist',
+        name: 'Investment Research',
+        elementId: 'grist-part1',
+      });
+      bootstrapGrist({
+        initialFile: 'weresheet.grist',
+        name: 'Werewolf stuff for some reason',
+        elementId: 'grist-part2',
+        light: true,
+      });
+      bootstrapGrist({
+        name: 'Students',
+        initialData: './StudentData.csv',
+        elementId: 'grist-part3',
+      });
+    </script>
+  </body>
+</html>

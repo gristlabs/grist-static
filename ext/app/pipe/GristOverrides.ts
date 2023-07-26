@@ -13,6 +13,7 @@ export interface GristOverrides {
   initialData?: string;
   fakeUrl?: string;
   fakeDocId?: string;
+  light?: boolean;
 }
 
 export function getGristOverrides(): GristOverrides {
