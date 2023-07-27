@@ -40,6 +40,10 @@ function preDecode(options: {
   }
   const location = new URL(fakeUrl + (extra || ''));
   location.search = at.search;
+  if (gristOverrides.light) {
+    location.searchParams.set('embed', 'true');
+    location.searchParams.set('style', 'light');
+  }
   location.hash = at.hash;
   options.url.href = location.href;
   console.log({options});
