@@ -4,9 +4,7 @@
   <title>grist-static examples</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
   <script src="https://grist-static.com/latest.js"></script>
@@ -19,20 +17,20 @@
 </div>
 
 <div class="container">
-  <div class="row">
+  <div class="row mb-5">
     <div class="col-sm-4">
       <h3>Example 1</h3>
-      <p><a href="investment-research.html"><img class="img-responsive" src="https://grist-static.com/icons/investment-research.jpg"></a></p>
-      <p><a href="investment-research.html">investment-research.grist</a>, drill down and summarize data.</p>
+      <p><a href="investment-research.html"><img class="img-fluid" src="https://grist-static.com/icons/investment-research.jpg"></a></p>
+      <p><a href="investment-research.html">investment-research.grist</a>, drill down, summarize data.</p>
     </div>
     <div class="col-sm-4">
       <h3>Example 2</h3>
-      <p><a href="meme-generator.html"><img class="img-responsive" src="https://grist-static.com/icons/meme-generator.jpg"></a></p>
+      <p><a href="meme-generator.html"><img class="img-fluid" src="https://grist-static.com/icons/meme-generator.jpg"></a></p>
       <p><a href="meme-generator.html">meme-generator.grist</a>, using custom widgets.</p>
     </div>
     <div class="col-sm-4">
       <h3>Example 3</h3>
-      <p style="border: 1px solid black;"><a href="blank-slate.html"><img class="img-responsive" src="https://grist-static.com/icons/health-insurance-comparison.jpg" style="opacity: 0.0;"></a></p>
+      <p style="border: 1px solid black;"><a href="blank-slate.html"><img class="img-fluid" src="https://grist-static.com/icons/health-insurance-comparison.jpg" style="opacity: 0.0;"></a></p>
       <p>A tabula rasa, a <a href="blank-slate.html">blank slate</a> to scribble on.</p>
     </div>
   </div>
@@ -55,7 +53,7 @@
       </p>
     </div>
 
-    <div class="col">
+    <div class="col mb-5">
       <pre id="were-div"><code class="language-html">&lt;!doctype html&gt;
 &lt;html&gt;
   &lt;head&gt;
@@ -73,14 +71,44 @@
       });
     &lt;/script&gt;
   &lt;/body&gt;
-&lt;/html&gt;</code><button id="were-click" class="btn btn-primary position-absolute mb-3 me-3">Run this code</button></pre>
-      <script>hljs.highlightAll();</script>
-      </div>
+&lt;/html&gt;</code></pre>
+      <button id="were-click" class="btn btn-primary">Run this code</button>
     </div>
   </div>
+
+  <div class="row mb-5">
+    <div class="col-sm-8">
+      <div class="mb-3">
+        We are experimenting with supporting other formats such as
+        CSV. You can specify `initialData` and have a CSV file loaded,
+        with types autodetected.  This is currently slow, since the
+        full Grist data engine must load before you see anything at
+        all, and we haven't optimized that process yet. Watch this
+        space.
+      </div>
+      <pre id="csv-div"><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf8&quot;&gt;
+    &lt;script src=&quot;https://grist-static.com/latest.js&quot;&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;script&gt;
+      bootstrapGrist({
+        initialData: 'products.csv',
+        light: true
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <button id="csv-click" class="btn btn-primary">Run this code</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
+  hljs.highlightAll();
   document.getElementById('were-click').addEventListener('click', function() {
     const div = document.getElementById('were-div');
     div.style.height = '500px';
@@ -93,6 +121,21 @@
       elementId: 'were-div',
       light: true
     });
+    document.getElementById('were-click').style.display = 'none';
+    return false;
+  });
+  document.getElementById('csv-click').addEventListener('click', function() {
+    const div = document.getElementById('csv-div');
+    div.style.height = '500px';
+    div.style.padding = '0';
+    div.style.border = '1px solid gray';
+    div.style.overflow = 'hidden';
+    bootstrapGrist({
+      initialData: 'products.csv',
+      elementId: 'csv-div',
+      light: true
+    });
+    document.getElementById('csv-click').style.display = 'none';
     return false;
   });
 </script>
