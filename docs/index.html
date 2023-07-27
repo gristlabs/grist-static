@@ -9,6 +9,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script src="https://grist-static.com/latest.js"></script>
 </head>
 <body>
 
@@ -22,7 +23,7 @@
     <div class="col-sm-4">
       <h3>Example 1</h3>
       <p><a href="investment-research.html"><img class="img-responsive" src="https://grist-static.com/icons/investment-research.jpg"></a></p>
-      <p><a href="investment-research.html">investment-research.grist</a>, drilling down and summarizing data.</p>
+      <p><a href="investment-research.html">investment-research.grist</a>, drill down and summarize data.</p>
     </div>
     <div class="col-sm-4">
       <h3>Example 2</h3>
@@ -38,8 +39,8 @@
 
   <div class="row">
     <div class="col-sm-4">
+      Use Grist as the PDF of data:
       <ul>
-        <li>Use Grist as the PDF of data.</li>
         <li>
           Publish your annual report and
           interactive spreadsheets side by side.
@@ -48,9 +49,6 @@
           Have the data behind your article on hand for readers
           to explore.
         </li>
-        <li>
-          <a href="weresheet.html">Werewolf</a>.
-        </li>
       </ul>
       <p>
         Learn more: <a href="https://github.com/gristlabs/grist-static">github.com/gristlabs/grist-static</a>
@@ -58,9 +56,7 @@
     </div>
 
     <div class="col">
-
-      <pre><code class="language-html">
-&lt;!doctype html&gt;
+      <pre id="were-div"><code class="language-html">&lt;!doctype html&gt;
 &lt;html&gt;
   &lt;head&gt;
     &lt;meta charset=&quot;utf8&quot;&gt;
@@ -70,16 +66,36 @@
   &lt;body&gt;
     &lt;script&gt;
       bootstrapGrist({
-        initialFile: 'investment-research.grist',   // path to .grist
-        name: 'Investment Research',                // optional name
+        initialFile: 'weresheet.grist',   // optional path to .grist
+        name: 'Werewolf Fact Sheet',      // optional name
+        elementId: 'were-div',            // optional element name
+        light: true                       // optional minimalist style
       });
     &lt;/script&gt;
   &lt;/body&gt;
-&lt;/html&gt;
-      </code></pre>
+&lt;/html&gt;</code><button id="were-click" class="btn btn-primary position-absolute mb-3 me-3">Run this code</button></pre>
       <script>hljs.highlightAll();</script>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+  document.getElementById('were-click').addEventListener('click', function() {
+    const div = document.getElementById('were-div');
+    div.style.height = '500px';
+    div.style.padding = '0';
+    div.style.border = 'none';
+    div.style.overflow = 'hidden';
+    bootstrapGrist({
+      initialFile: 'weresheet.grist',
+      name: 'Werewolf Fact Sheet',
+      elementId: 'were-div',
+      light: true
+    });
+    return false;
+  });
+</script>
+
 </body>
 </html>
