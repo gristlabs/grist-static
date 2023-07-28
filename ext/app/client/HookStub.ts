@@ -40,7 +40,7 @@ function preDecode(options: {
   }
   const location = new URL(fakeUrl + (extra || ''));
   location.search = at.search;
-  if (gristOverrides.light) {
+  if (gristOverrides.singlePage) {
     location.searchParams.set('embed', 'true');
     location.searchParams.set('style', 'light');
   }
