@@ -67,7 +67,7 @@
         initialFile: 'weresheet.grist',   // optional path to .grist
         name: 'Werewolf Fact Sheet',      // optional name
         elementId: 'were-div',            // optional element name
-        light: true                       // optional minimalist style
+        singlePage: true                  // optional minimalist style
       });
     &lt;/script&gt;
   &lt;/body&gt;
@@ -96,7 +96,7 @@
     &lt;script&gt;
       bootstrapGrist({
         initialData: 'products.csv',
-        light: true
+        singlePage: true
       });
     &lt;/script&gt;
   &lt;/body&gt;
@@ -119,7 +119,7 @@
       initialFile: 'weresheet.grist',
       name: 'Werewolf Fact Sheet',
       elementId: 'were-div',
-      light: true
+      singlePage: true
     });
     document.getElementById('were-click').style.display = 'none';
     return false;
@@ -133,7 +133,7 @@
     bootstrapGrist({
       initialData: 'products.csv',
       elementId: 'csv-div',
-      light: true
+      singlePage: true
     });
     document.getElementById('csv-click').style.display = 'none';
     return false;

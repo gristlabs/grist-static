@@ -82,8 +82,8 @@ function bootstrapGrist(options) {
   const fakeUrl = "https://example.com/o/docs/doc/new~2d6rcxHotohxAuTxttFRzU";
   settings.fakeUrl = fakeUrl;
   settings.fakeDocId = fakeDocId;
-  if (options.light) {
-    settings.light = Boolean(options.light);
+  if (options.singlePage) {
+    settings.singlePage = Boolean(options.singlePage);
   }
   window.gristConfig = {
     "homeUrl":homeUrl,
