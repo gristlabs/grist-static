@@ -15,7 +15,7 @@ self.callExternal = (name, args) => {
 }
 
 async function initPyodide() {
-  importScripts(self.urlPrefix + 'pyodide/pyodide.js');
+  importScripts('https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/pyodide.js');
   const pyodide = await loadPyodide();
   console.log(pyodide.runPython(`
 import sys
