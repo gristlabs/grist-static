@@ -11,7 +11,7 @@ const packages = [
   "executing-1.1.1-cp311-none-any.whl",
   "friendly_traceback-0.7.48-cp311-none-any.whl",
   "iso8601-0.1.12-cp311-none-any.whl",
-  "lazy_object_proxy-1.6.0-cp311-cp311-emscripten_3_1_39_wasm32.whl",
+  "lazy_object_proxy-1.6.0-cp311-cp311-emscripten_3_1_32_wasm32.whl",
   "openpyxl-3.0.10-cp311-none-any.whl",
   "phonenumberslite-8.12.57-cp311-none-any.whl",
   "pure_eval-0.2.2-cp311-none-any.whl",
@@ -47,8 +47,6 @@ sys.version
   );
   pyodide.runPython(`
 import sys
-sys.path.append('/lib/python3.9/site-packages/grist/')
-sys.path.append('/lib/python3.10/site-packages/grist/')
 sys.path.append('/lib/python3.11/site-packages/grist/')
 import main
 import sandbox as sandbox_mod
