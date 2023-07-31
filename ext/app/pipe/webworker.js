@@ -3,6 +3,27 @@
  */
 import {guessColInfo} from 'app/common/ValueGuesser';
 import {convertFromColumn} from 'app/common/ValueConverter';
+const packages = [
+  "astroid-2.14.2-cp311-none-any.whl",
+  "asttokens-2.2.1-cp311-none-any.whl",
+  "chardet-4.0.0-cp311-none-any.whl",
+  "et_xmlfile-1.0.1-cp311-none-any.whl",
+  "executing-1.1.1-cp311-none-any.whl",
+  "friendly_traceback-0.7.48-cp311-none-any.whl",
+  "iso8601-0.1.12-cp311-none-any.whl",
+  "lazy_object_proxy-1.6.0-cp311-cp311-emscripten_3_1_39_wasm32.whl",
+  "openpyxl-3.0.10-cp311-none-any.whl",
+  "phonenumberslite-8.12.57-cp311-none-any.whl",
+  "pure_eval-0.2.2-cp311-none-any.whl",
+  "python_dateutil-2.8.2-cp311-none-any.whl",
+  "roman-3.3-cp311-none-any.whl",
+  "six-1.16.0-cp311-none-any.whl",
+  "sortedcontainers-2.4.0-cp311-none-any.whl",
+  "stack_data-0.5.1-cp311-none-any.whl",
+  "typing_extensions-4.4.0-cp311-none-any.whl",
+  "unittest_xml_reporting-2.0.0-cp311-none-any.whl",
+  "wrapt-1.15.0-cp311-none-any.whl"
+];
 
 // Add to self to make this accessible within Python as js.callExternal
 self.callExternal = (name, args) => {
@@ -21,35 +42,8 @@ async function initPyodide() {
 import sys
 sys.version
 `));
-  const packages = [
-    "packages/astroid-2.14.2-py3-none-any.whl",
-    "packages/asttokens-2.0.5-py2.py3-none-any.whl",
-    "packages/backports.functools_lru_cache-1.6.4-py2.py3-none-any.whl",
-    "packages/chardet-4.0.0-py2.py3-none-any.whl",
-    "packages/enum34-1.1.10-py3-none-any.whl",
-    "packages/et_xmlfile-1.0.1-py3-none-any.whl",
-    "packages/executing-1.1.1-py2.py3-none-any.whl",
-    "packages/friendly_traceback-0.7.48-py3-none-any.whl",
-    "packages/iso8601-0.1.12-py2.py3-none-any.whl",
-    "packages/jdcal-1.4.1-py2.py3-none-any.whl",
-    "packages/lazy_object_proxy-1.6.0-cp311-cp311-emscripten_3_1_31_wasm32.whl",
-    "packages/openpyxl-3.0.10-py2.py3-none-any.whl",
-    "packages/phonenumberslite-8.12.57-py2.py3-none-any.whl",
-    "packages/pure_eval-0.2.2-py3-none-any.whl",
-    "packages/python_dateutil-2.8.2-py2.py3-none-any.whl",
-    "packages/roman-3.3-py2.py3-none-any.whl",
-    "packages/singledispatch-3.6.2-py2.py3-none-any.whl",
-    "packages/six-1.16.0-py2.py3-none-any.whl",
-    "packages/sortedcontainers-2.4.0-py2.py3-none-any.whl",
-    "packages/stack_data-0.5.1-py3-none-any.whl",
-    "packages/typing_extensions-4.4.0-py3-none-any.whl",
-    "packages/unittest_xml_reporting-2.0.0-py2.py3-none-any.whl",
-    "packages/wrapt-1.12.1-cp311-cp311-emscripten_3_1_31_wasm32.whl",
-
-    "packages/grist-1.0-py3-none-any.whl"
-  ];
   await pyodide.loadPackage(
-    packages.map(l => self.urlPrefix + l)
+    [...packages, "grist-1.0-py3-none-any.whl"].map(l => self.urlPrefix + "packages/" + l)
   );
   pyodide.runPython(`
 import sys
