@@ -472,10 +472,10 @@ pump@^3.0.0:
     end-of-stream "^1.1.0"
     once "^1.3.1"
 
-pyodide@0.22.1:
-  version "0.22.1"
-  resolved "https://registry.yarnpkg.com/pyodide/-/pyodide-0.22.1.tgz#45bfab36ef332ec7fed6fb9736ab13ebd54f05d1"
-  integrity sha512-6+PkFLTC+kcBKtFQxYBxR44J5IBxLm8UGkobLgZv1SxzV9qOU2rb0YYf0qDtlnfDiN/IQd2uckf+D8Zwe88Mqg==
+pyodide@0.23.4:
+  version "0.23.4"
+  resolved "https://registry.yarnpkg.com/pyodide/-/pyodide-0.23.4.tgz#99b9a31e5e0238d90329cf4a5b2e4b532cba1026"
+  integrity sha512-WpQUHaIXQ1xede5BMqPAjBcmopxN22s5hEsYOR8T7/UW/fkNLFUn07SaemUgthbtvedD5JGymMMj4VpD9sGMTg==
   dependencies:
     base-64 "^1.0.0"
     node-fetch "^2.6.1"
