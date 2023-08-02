@@ -60,7 +60,7 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
   * You can also pass `elementId: 'element-id` to open Grist within an element in your page.
     - If using `elementId`, and serving a `.grist` or `.csv` file at a URL that requires cookie-based authentication, be aware that Firefox may not support this yet ([bug report](https://bugzilla.mozilla.org/show_bug.cgi?id=1741489)).
 	- In that case, you can include a small wrapper page for your document as above, and embed it as an iframe yourself.
-  * You can set `light: true` for a less busy, single page layout.
+  * You can set `singlePage: true` for a less busy, single page layout.
 
 ## Differences with regular Grist
 
