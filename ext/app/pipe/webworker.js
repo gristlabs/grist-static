@@ -3,6 +3,10 @@
  */
 import {guessColInfo} from 'app/common/ValueGuesser';
 import {convertFromColumn} from 'app/common/ValueConverter';
+
+// This file is copied from core/sandbox/pyodide/ where it's built by packages.js.
+// Remember to update it when packages are rebuilt.
+// TODO automate the copying or make symlinking work.
 import packages from './package_filenames.json';
 
 // Add to self to make this accessible within Python as js.callExternal
