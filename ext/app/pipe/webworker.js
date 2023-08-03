@@ -3,6 +3,7 @@
  */
 import {guessColInfo} from 'app/common/ValueGuesser';
 import {convertFromColumn} from 'app/common/ValueConverter';
+const {loadPyodide} = require("pyodide");  // importing causes weird webpack errors
 
 // This file is copied from core/sandbox/pyodide/ where it's built by packages.js.
 // Remember to update it when packages are rebuilt.
@@ -20,8 +21,7 @@ self.callExternal = (name, args) => {
 }
 
 async function initPyodide() {
-  importScripts('https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/pyodide.js');
-  const pyodide = await loadPyodide();
+  const pyodide = await loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/'});
   console.log(pyodide.runPython(`
 import sys
 sys.version
