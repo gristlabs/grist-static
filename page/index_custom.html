@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf8">
+  <script src="static/pipe/bootstrap.js"></script>
+
+  <title>Easily add it to your web page</title>
+</head>
+
+<body>
+  <p>
+    To any anchor element to show <a is="grist-link" href="./StudentData.csv" name="Students" single-page>CSV</a> data on a popup.
+  </p>
+
+  <p>
+    Or any <a is="grist-link" href="./investment-research.grist" name="Students" single-page>Grist document</a> as well.
+  </p>
+
+  <p>
+    There is a <button is="grist-button" initial-file="investment-research.grist" name="Students" single-page>button</button> variant.
+  </p>
+
+  <p>
+    And one with default style
+    <button class="grist" is="grist-button" initial-file="investment-research.grist" name="Students" single-page>View as csv</button>
+    <button class="grist-large" is="grist-button" initial-file="investment-research.grist" name="Students" single-page>Large view data</button>
+  </p>
+
+  <p>
+    Works in any framework, like <span id="react"></span> or <span id="vue"></span> and others.
+
+    <!-- React part-->
+    <script src="https://unpkg.com/react@17.0.2/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js"></script>
+    <script>
+      const App = () => {
+        return (
+          React.createElement("a", {is: "grist-link", href: "./investment-research.grist"}, "React")
+        );
+      };
+      ReactDOM.render(React.createElement(App), document.getElementById("react"));
+    </script>
+
+    <!-- Vue part-->
+    <script src="https://unpkg.com/vue@3.2.6/dist/vue.global.js"></script>
+    <script>
+      const app = Vue.createApp({
+        template: `
+          <a is="grist-link" href="./investment-research.grist" name="Students" single-page>Vue</a>
+        `,
+      });
+      app.mount("#vue");
+    </script>
+  </p>
+
+
+  <p>
+    Can also be easily embedded as a plain HTML element.
+    <grist-viewer initial-file="investment-research.grist" name="Investment" style="height: 500px; border: 1px solid black"></grist-viewer>
+  </p>
+</body>
+
+</html>
