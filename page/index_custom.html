@@ -55,6 +55,22 @@
 
 
   <p>
+    Allows easily preview CSV documents.
+
+    <csv-drop id="csv-drop"></csv-drop>
+    <script>
+      const csvDrop = document.getElementById("csv-drop");
+      csvDrop.addEventListener("file-changed", (e) => {
+        previewInGrist({
+          initialContent: e.detail.data,
+          singlePage: true
+        });
+      });
+    </script>
+  </p>
+
+
+  <p>
     Can also be easily embedded as a plain HTML element.
     <csv-viewer initial-file="investment-research.grist" name="Investment" style="height: 500px; border: 1px solid black"></csv-viewer>
   </p>

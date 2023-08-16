@@ -28,13 +28,15 @@
       const initialFile = this.getAttribute('initial-file') || gristHref;
       const name = this.getAttribute('name') || "";
       const initialData = this.getAttribute('initial-data') || csvHref;
+      const initialContent = this.getAttribute('initial-content');
       const singlePage = this.hasAttribute('single-page');
       const loader = this.hasAttribute('loader');
       bootstrapGrist({
         element: this,
-        initialFile,
         name,
+        initialFile,
         initialData,
+        initialContent,
         singlePage,
         loader
       });
@@ -52,33 +54,11 @@
       return;
     }
     clickEvent.preventDefault();
-    openGristInAPopup(clickEvent.target);
+    previewInGristClickHandler(clickEvent.target);
   });
 
 
-  function openGristInAPopup(refElement) {
-  
-    // Read all the settings from the element.
-    const name = refElement.getAttribute('data-name');
-    const singlePage = refElement.hasAttribute('data-single-page');
-    // Allow all settings for the URL in that order. Href accepts both format and is easier to use.
-    const href =
-      refElement.getAttribute('href') ||
-      refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ||
-      refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open');
-      
-    const initAttribute = refElement.hasAttribute('href') ? (href.endsWith('.csv') ? 'initial-data' : 'initial-file') :
-      refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ? 'initial-file' :
-      refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open') ? 'initial-data' :
-      null;
-
-    // Remove any existing popup.
-    document.querySelectorAll('#grist-viewer-popup').forEach((el) => el.remove());
-
-    // Loader is shown by default, needs an explicit false to disable.
-    const loader = refElement.getAttribute('data-loader') === 'false' ? '' : 'loader';
-
-    // Build popup element and attach it to the end of body tag.
+  function previewInGrist(options) {
     const popup = document.createElement('div');
     popup.id = 'grist-viewer-popup';
     popup.style.position = 'absolute';
@@ -91,6 +71,11 @@
     popup.style.backgroundColor = /* little black overlay */ 'rgba(0,0,0,0.5)';
     popup.style.display = 'flex';
     popup.style.flexDirection = 'column';
+    const href = options.initialFile || options.initialData || options.initialContent;
+    console.assert(href, 'Must provide initialFile, initialData or initialContent');
+    const initAttribute = options.initialFile ? 'initial-file' : options.initialData ? 'initial-data' : 'initial-content';
+    const {name, singlePage} = options;
+    const loader = options.loader === false ? '' : 'loader';
     popup.innerHTML = `
       <csv-viewer ${initAttribute}="${href}" name="${name}" ${loader} style="flex: 1" ${singlePage ? 'single-page' : ' '}></csv-viewer>
       <div style="
@@ -107,11 +92,44 @@
           <path d="M18 6L6 18M6 6l12 12"></path>
         </svg>
       </button>
+      <!-- Prevent scrolling of the page behind the popup. -->
+      <style>
+        html, body {
+          overflow: hidden;
+        }
+      </style>
     `;
     popup.querySelector('button').addEventListener('click', () => popup.remove());
+
+    // Remove any existing popup.
+    document.querySelectorAll('#grist-viewer-popup').forEach((el) => el.remove());
+
+    // Add the popup to the end of the body.
     document.body.appendChild(popup);
   }
 
+  function previewInGristClickHandler(refElement) {
+    // Read all the settings from the element.
+    const name = refElement.getAttribute('data-name');
+    const singlePage = refElement.hasAttribute('data-single-page');
+    // Allow all settings for the URL in that order. Href accepts both format and is easier to use.
+    const href =
+      refElement.getAttribute('href') ||
+      refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ||
+      refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open');
+
+    const initAttribute = refElement.hasAttribute('href') ? (href.endsWith('.csv') ? 'initialData' : 'initialFile') :
+      refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ? 'initialFile' :
+        refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open') ? 'initialFile' :
+          null;
+
+    // Loader is shown by default, needs an explicit false to disable.
+    const loader = refElement.getAttribute('data-loader') === 'false' ? false : true;
+
+    previewInGrist({[initAttribute]: href, name, singlePage, loader});
+  }
+
+  window.previewInGrist = previewInGrist;
 
   // ##################### Default styles for buttons #####################
 
@@ -144,5 +162,155 @@
     const styleElement = document.createElement('style');
     styleElement.textContent = content;
     document.head.appendChild(styleElement);
+    return styleElement;
   }
+
+
+  // ##################### CSV drop #####################
+
+
+  class CsvDrop extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: 'open'});
+      this.shadowRoot.innerHTML = `
+        <style>
+          :host {
+            font-family: sans-serif;
+            display: block;
+          }
+          #drop-area-surround {
+            border-radius: 24px;
+            padding: 20px;
+            width: 480px;
+            margin: 50px auto;
+            padding: 8px;
+            background-color: #27d843;
+          }
+          #drop-area {
+            border: 2px dashed #fff;
+            border-radius: 16px;
+            padding: 20px;
+          }
+          #drop-area.highlight {
+            border: 2px solid yellow;
+          }
+          p {
+            margin-top: 0;
+          }
+          .my-form {
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+          }
+          #gallery {
+            margin-top: 10px;
+            display: none;
+          }
+          #gallery img {
+            width: 150px;
+            margin-bottom: 10px;
+            margin-right: 10px;
+            vertical-align: middle;
+          }
+          .button {
+            display: inline-block;
+            padding: 10px;
+            color: black;
+            background: #eee;
+            cursor: pointer;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+          }
+          .button:hover {
+            background: #ddd;
+          }
+          #fileElem {
+            display: none;
+          }
+        </style>
+        <div id="drop-area-surround">
+          <div id="drop-area">
+            <form class="my-form">
+              <div>
+                Drag & Drop to<br />
+                Upload File
+              </div>
+
+              <div>
+                OR
+              </div>
+
+              <div>
+                <input type="file" id="fileElem" accept=".csv" />
+                <label class="button" for="fileElem">Browse File</label>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    connectedCallback() {
+      const root = this.shadowRoot;
+      function setupLoader(element, callback) {
+        let dropArea = root.getElementById(element);
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dropArea.addEventListener(eventName, preventDefaults, false)
+          document.body.addEventListener(eventName, preventDefaults, false)
+        });
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false)
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false)
+        });
+        dropArea.addEventListener('drop', handleDrop, false)
+        dropArea.querySelector('input[type=file]').addEventListener('change', function() {
+          handleFiles(this.files);
+        });
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        function handleDrop(e) {
+          var dt = e.dataTransfer;
+          var files = dt.files;
+          handleFiles(files);
+        }
+        function handleFiles(files) {
+          files = [...files];
+          files.forEach(previewFile);
+        }
+        function previewFile(file) {
+          let reader = new FileReader();
+          reader.readAsText(file);
+          reader.onloadend = function() {
+            callback({
+              txt: reader.result,
+              name: file.name,
+            });
+          }
+        }
+      }
+      const processAddition = (addition) => {
+        const {txt, name} = addition;
+        const event = new CustomEvent('file-changed', {
+          detail : {
+            data: txt,
+            name,
+          }
+        });
+        this.dispatchEvent(event);
+      }
+      setupLoader('drop-area', processAddition);
+    }
+  }
+
+  customElements.define('csv-drop', CsvDrop);
 })();

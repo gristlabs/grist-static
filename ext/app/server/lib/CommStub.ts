@@ -79,9 +79,10 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     //await this.ad.createEmptyDoc({});
     const hasSeed = gristOverrides.seedFile;
     const initialDataUrl = gristOverrides.initialData;
+    const initialContent = gristOverrides.initialContent;
     await this.ad.loadDoc({mode: 'system'}, {
       forceNew: !hasSeed,
-      skipInitialTable: hasSeed || initialDataUrl,
+      skipInitialTable: hasSeed || initialDataUrl || initialContent,
       useExisting: true,
     });
     this.client = {
@@ -147,7 +148,9 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     }, {});
     (window as any).ad = this.ad;
 
-    if (initialDataUrl) {
+    if (initialContent) {
+      await this._loadInitialContent(initialContent);
+    } else if (initialDataUrl) {
       await this._loadInitialData(initialDataUrl);
     }
 
@@ -171,6 +174,10 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     const content = await (await fetch(initialDataUrl)).text();
     // Extract filename from end of URL
     const originalFilename = initialDataUrl.match(/[^/]+$/)?.[0] || "data.csv";
+    await this._loadInitialContent(content, originalFilename);
+  }
+
+  private async _loadInitialContent(content: string, originalFilename: string = "data.csv") {
     const path = "/tmp/data.csv";
     const parseOptions = {};
     await this.ad._pyCall("save_file", path, content);

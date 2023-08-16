@@ -11,6 +11,7 @@ export interface GristOverrides {
   };
   seedFile?: string;
   initialData?: string;
+  initialContent?: string;
   fakeUrl?: string;
   fakeDocId?: string;
   singlePage?: boolean;

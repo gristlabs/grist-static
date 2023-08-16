@@ -76,7 +76,9 @@ function bootstrapGrist(options) {
   if (seedFile) {
     settings.seedFile = new URL(seedFile, bootstrapGristLocation);
   }
-  if (options.initialData) {
+  if (options.initialContent) {
+    settings.initialContent = options.initialContent;
+  } else if (options.initialData) {
     settings.initialData = options.initialData;
   }
   const fakeDocId = "new~2d6rcxHotohxAuTxttFRzU";
