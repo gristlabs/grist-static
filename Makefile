@@ -35,13 +35,15 @@ copy:
 package:
 	./scripts/build_dist.sh
 
-run-demo:
+docker:
 	make package
 	rm -rf _dist
 	cp -Lr dist _dist 2>/dev/null || true
 	docker build -t grist-static-demo .
-	docker run -it -p 3000:3000 grist-static-demo
 
+docker-run:
+	make docker
+	docker run -it -p 3000:3000 grist-static-demo
 
 serve:
 	@echo "========================================="

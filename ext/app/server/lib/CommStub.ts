@@ -171,7 +171,13 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
   }
 
   private async _loadInitialData(initialDataUrl: string) {
-    const content = await (await fetch(initialDataUrl)).text();
+    const response = await fetch(initialDataUrl, {
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to load initial data from ${initialDataUrl}: ${response.statusText}`);
+    }
+    const content = await response.text();
     // Extract filename from end of URL
     const originalFilename = initialDataUrl.match(/[^/]+$/)?.[0] || "data.csv";
     await this._loadInitialContent(content, originalFilename);

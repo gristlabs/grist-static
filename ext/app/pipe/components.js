@@ -61,7 +61,7 @@
   function previewInGrist(options) {
     const popup = document.createElement('div');
     popup.id = 'grist-viewer-popup';
-    popup.style.position = 'absolute';
+    popup.style.position = 'fixed';
     popup.style.top = '0';
     popup.style.left = '0';
     popup.style.right = '0';
@@ -118,14 +118,19 @@
       refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ||
       refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open');
 
-    const initAttribute = refElement.hasAttribute('href') ? (href.endsWith('.csv') ? 'initialData' : 'initialFile') :
-      refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ? 'initialFile' :
-        refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open') ? 'initialFile' :
-          null;
+    const hasExtension = href.toLowerCase().endsWith('.csv') || href.toLowerCase().endsWith('.grist');
+    let initAttribute = null;
+    if (hasExtension) {
+      initAttribute = href.toLowerCase().endsWith('.csv') ? 'initialData' : 'initialFile';
+    } else {
+      initAttribute = refElement.hasAttribute('data-initial-file') || refElement.hasAttribute('data-grist-doc-open') ? 'initialFile' :
+                      refElement.hasAttribute('data-initial-data') || refElement.hasAttribute('data-grist-csv-open') ? 'initialData' :
+                      null;
+    }
+    console.assert(initAttribute, 'Must provide initialFile, initialData or initialContent');
 
     // Loader is shown by default, needs an explicit false to disable.
     const loader = refElement.getAttribute('data-loader') === 'false' ? false : true;
-
     previewInGrist({[initAttribute]: href, name, singlePage, loader});
   }
 
@@ -273,6 +278,7 @@
         dropArea.addEventListener('drop', handleDrop, false)
         dropArea.querySelector('input[type=file]').addEventListener('change', function() {
           handleFiles(this.files);
+          this.value = null;
         });
         function preventDefaults(e) {
           e.preventDefault();
