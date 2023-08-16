@@ -34,12 +34,11 @@ copy:
 
 package:
 	./scripts/build_dist.sh
-	
-build-demo:
-	./scripts/build_demo.sh
 
 run-demo:
-	make build-demo
+	make package
+	rm -rf _dist
+	cp -Lr dist _dist 2>/dev/null || true
 	docker build -t grist-static-demo .
 	docker run -it -p 3000:3000 grist-static-demo
 

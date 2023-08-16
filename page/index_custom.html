@@ -3,8 +3,7 @@
 
 <head>
   <meta charset="utf8">
-  <script src="csv-viewer.js"></script>
-
+  <script src="static/pipe/csv-viewer.js"></script>
   <title>Easily add it to your web page</title>
 </head>
 
@@ -18,13 +17,13 @@
   </p>
 
   <p>
-    There is a <button is="grist-button" initial-file="investment-research.grist" name="Students" single-page>button</button> variant.
+    There is a <button is="grist-button" data:grist-doc-open="investment-research.grist" name="Students" single-page>button</button> variant.
   </p>
 
   <p>
     And one with default style
-    <button class="grist" is="grist-button" initial-file="investment-research.grist" name="Students" single-page>View as csv</button>
-    <button class="grist-large" is="grist-button" initial-file="investment-research.grist" name="Students" single-page>Large view data</button>
+    <button class="grist" is="grist-button" data:grist-doc-open="investment-research.grist" name="Students" single-page>View as csv</button>
+    <button class="grist-large" is="grist-button" data:grist-csv-open="./StudentData.csv" name="Students" single-page>Large view data</button>
   </p>
 
   <p>
@@ -57,7 +56,7 @@
 
   <p>
     Can also be easily embedded as a plain HTML element.
-    <grist-viewer initial-file="investment-research.grist" name="Investment" style="height: 500px; border: 1px solid black"></grist-viewer>
+    <csv-viewer initial-file="investment-research.grist" name="Investment" style="height: 500px; border: 1px solid black"></csv-viewer>
   </p>
 </body>
 
