@@ -10,20 +10,13 @@
   style(`
     csv-viewer {
       display: block;
-      background: white;
-    }
-    #grist-static-loader {
-      position: absolute;
-      width: 100vw;
-      height: 100vh;
-      background-color: var(--color-logo-bg);
-      z-index: 1;
     }
   `);
   // Now build the custom element.
   class CsvViewer extends HTMLElement {
     constructor() {
       super();
+
     }
     connectedCallback() {
       if (this.initiated) {return;}
@@ -36,12 +29,14 @@
       const name = this.getAttribute('name') || "";
       const initialData = this.getAttribute('initial-data') || csvHref;
       const singlePage = this.hasAttribute('single-page');
+      const loader = this.hasAttribute('loader');
       bootstrapGrist({
         element: this,
         initialFile,
         name,
         initialData,
-        singlePage
+        singlePage,
+        loader
       });
     }
   }
@@ -53,7 +48,7 @@
   // Adds a global click handler for elements that should open a Grist document in a popup.
 
   window.addEventListener('click', (clickEvent) => {
-    if (!clickEvent.target.matches('[data\\:grist-csv-open],[data\\:grist-doc-open],a[is=grist-link]')) {
+    if (!clickEvent.target.matches('[data-grist-csv-open],[data-grist-doc-open]')) {
       return;
     }
     clickEvent.preventDefault();
@@ -64,20 +59,24 @@
   function openGristInAPopup(refElement) {
   
     // Read all the settings from the element.
-    const name = refElement.getAttribute('name');
-    const singlePage = refElement.hasAttribute('single-page');
+    const name = refElement.getAttribute('data-name');
+    const singlePage = refElement.hasAttribute('data-single-page');
     // Allow all settings for the URL in that order. Href accepts both format and is easier to use.
     const href =
-      refElement.getAttribute('initial-file') || refElement.getAttribute('data:grist-doc-open') ||
-      refElement.getAttribute('initial-data') || refElement.getAttribute('data:grist-csv-open') ||
-      refElement.getAttribute('href');
-    const initAttribute =
-      refElement.getAttribute('initial-file') || refElement.getAttribute('data:grist-doc-open') ? 'initial-file' :
-      refElement.getAttribute('initial-data') || refElement.getAttribute('data:grist-csv-open') ? 'initial-data' :
-      href.endsWith('.csv') ? 'initial-data' : 'initial-file';
+      refElement.getAttribute('href') ||
+      refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ||
+      refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open');
+      
+    const initAttribute = refElement.hasAttribute('href') ? (href.endsWith('.csv') ? 'initial-data' : 'initial-file') :
+      refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ? 'initial-file' :
+      refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open') ? 'initial-data' :
+      null;
 
     // Remove any existing popup.
     document.querySelectorAll('#grist-viewer-popup').forEach((el) => el.remove());
+
+    // Loader is shown by default, needs an explicit false to disable.
+    const loader = refElement.getAttribute('data-loader') === 'false' ? '' : 'loader';
 
     // Build popup element and attach it to the end of body tag.
     const popup = document.createElement('div');
@@ -90,8 +89,10 @@
     popup.style.zIndex = '1000';
     popup.style.padding = '60px';
     popup.style.backgroundColor = /* little black overlay */ 'rgba(0,0,0,0.5)';
+    popup.style.display = 'flex';
+    popup.style.flexDirection = 'column';
     popup.innerHTML = `
-      <csv-viewer ${initAttribute}="${href}" name="${name}" style="height: 100%" ${singlePage ? 'single-page' : ' '}></csv-viewer>
+      <csv-viewer ${initAttribute}="${href}" name="${name}" ${loader} style="flex: 1" ${singlePage ? 'single-page' : ' '}></csv-viewer>
       <div style="
         font-size: 14px;
         text-align: center;

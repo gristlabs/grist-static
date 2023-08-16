@@ -9,21 +9,21 @@
 
 <body>
   <p>
-    To any anchor element to show <a is="grist-link" href="./StudentData.csv" name="Students" single-page>CSV</a> data on a popup.
+    To any anchor element to show <a data-grist-csv-open href="./StudentData.csv" data-name="Students" data-single-page>CSV</a> data on a popup.
   </p>
 
   <p>
-    Or any <a is="grist-link" href="./investment-research.grist" name="Students" single-page>Grist document</a> as well.
+    Or any <a data-grist-doc-open href="./investment-research.grist" data-name="Students" data-single-page>Grist document</a> as well.
   </p>
 
   <p>
-    There is a <button is="grist-button" data:grist-doc-open="investment-research.grist" name="Students" single-page>button</button> variant.
+    There is a <button data-grist-doc-open="investment-research.grist" data-name="Students" data-single-page>button</button> variant.
   </p>
 
   <p>
     And one with default style
-    <button class="grist" is="grist-button" data:grist-doc-open="investment-research.grist" name="Students" single-page>View as csv</button>
-    <button class="grist-large" is="grist-button" data:grist-csv-open="./StudentData.csv" name="Students" single-page>Large view data</button>
+    <button class="grist" data-grist-doc-open="investment-research.grist" data-name="Students" data-single-page>View as csv</button>
+    <button class="grist-large" data-grist-csv-open="./StudentData.csv" data-name="Students" data-single-page>Large view data</button>
   </p>
 
   <p>
@@ -35,7 +35,7 @@
     <script>
       const App = () => {
         return (
-          React.createElement("a", {is: "grist-link", href: "./investment-research.grist"}, "React")
+          React.createElement("a", {'data-grist-doc-open': '', href: "./investment-research.grist"}, "React")
         );
       };
       ReactDOM.render(React.createElement(App), document.getElementById("react"));
@@ -46,7 +46,7 @@
     <script>
       const app = Vue.createApp({
         template: `
-          <a is="grist-link" href="./investment-research.grist" name="Students" single-page>Vue</a>
+          <a data-grist-doc-open href="./investment-research.grist" name="Students" single-page>Vue</a>
         `,
       });
       app.mount("#vue");
