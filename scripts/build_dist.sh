@@ -13,6 +13,7 @@ done
 ./scripts/link_page_resources.sh link
 
 cat dist/static/pipe/bootstrap.js | sed "s/^settings.bootstrapGristPrefix = .*/settings.bootstrapGristPrefix = XXX;/" > dist/latest.js
+cat dist/latest.js dist/static/pipe/components.js > dist/csv-viewer.js
 
 echo "================================================"
 echo "== Prepared dist/static directory"

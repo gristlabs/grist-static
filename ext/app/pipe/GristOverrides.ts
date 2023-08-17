@@ -9,8 +9,18 @@ export interface GristOverrides {
   staticGristOptions?: {
     name?: string;
   };
+  /**
+   * .grist doc URL.
+   */
   seedFile?: string;
+  /**
+   * .csv file URL.
+   */
   initialData?: string;
+  /**
+   * .csv file content to load. Not used when initialData is set.
+   */
+  initialContent?: string;
   fakeUrl?: string;
   fakeDocId?: string;
   singlePage?: boolean;

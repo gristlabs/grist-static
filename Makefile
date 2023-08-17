@@ -37,7 +37,7 @@ package:
 
 serve:
 	@echo "========================================="
-	@echo "See http://localhost:3030/page/index.html"
+	@echo "See http://localhost:3030/page"
 	@echo "========================================="
 	./scripts/link_page_resources.sh
-	python -m http.server 3030
+	python3 -m http.server 3030

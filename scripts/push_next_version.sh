@@ -22,3 +22,6 @@ aws s3 sync dist/static $s3url
 # point to new version
 cat dist/latest.js | sed "s|XXX|'$http'|" > dist/latest-send.js
 aws s3 cp dist/latest-send.js s3://grist-static/next.js --cache-control max-age=60
+
+# same for csv viewer
+aws s3 cp dist/csv-viewer.js s3://grist-static/csv-viewer-next.js --cache-control max-age=60

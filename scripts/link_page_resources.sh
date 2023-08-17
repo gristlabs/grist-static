@@ -58,6 +58,8 @@ rm -rf pipe
 mkdir -p pipe
 cd pipe
 transfer ./ ../../../ext/app/pipe/bootstrap.js bootstrap.js
+transfer ./ ../../../ext/app/pipe/components.js components.js
+transfer ./ ../../../ext/app/pipe/csv-viewer.js csv-viewer.js
 transfer ../../../core/app/server/ ../../sandbox/pyodide/_build/packages packages
 cd ..
 

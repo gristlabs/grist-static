@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf8">
+  <script src="static/pipe/csv-viewer.js"></script>
+  <title>Easily add it to your web page</title>
+</head>
+
+<body>
+  <p>
+    To any anchor element to show <a data-grist-csv-open href="./StudentData.csv" data-name="Students" data-single-page>CSV</a> data on a popup.
+  </p>
+
+  <p>
+    Or any <a data-grist-doc-open="./investment-research.grist" href="#" data-name="Students" data-single-page>Grist document</a> as well.
+  </p>
+
+
+  <p>
+    There is a <button data-grist-doc-open="investment-research.grist" data-name="Students" data-single-page>button</button> variant.
+  </p>
+
+  <p>
+    And one with default style
+    <button class="grist" data-grist-doc-open="investment-research.grist" data-name="Students" data-single-page>View as csv</button>
+    <button class="grist-large" data-grist-csv-open="./StudentData.csv" data-name="Students" data-single-page>Large view data</button>
+  </p>
+
+  <p>
+    Works in any framework, like <span id="react"></span> or <span id="vue"></span> and others.
+
+    <!-- React part-->
+    <script src="https://unpkg.com/react@17.0.2/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js"></script>
+    <script>
+      const App = () => {
+        return (
+          React.createElement("a", {'data-grist-doc-open': '', href: "./investment-research.grist"}, "React")
+        );
+      };
+      ReactDOM.render(React.createElement(App), document.getElementById("react"));
+    </script>
+
+    <!-- Vue part-->
+    <script src="https://unpkg.com/vue@3.2.6/dist/vue.global.js"></script>
+    <script>
+      const app = Vue.createApp({
+        template: `
+          <a data-grist-doc-open href="./investment-research.grist" name="Students" single-page>Vue</a>
+        `,
+      });
+      app.mount("#vue");
+    </script>
+  </p>
+
+
+  <p>
+    Allows easily preview CSV documents.
+
+    <script>
+      // This is just a concept of how it can be done.
+      class CsvDrop extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({mode: 'open'});
+          this.shadowRoot.innerHTML = `
+            <style>
+              :host {
+                font-family: sans-serif;
+                display: block;
+              }
+              #drop-area-surround {
+                border-radius: 24px;
+                padding: 20px;
+                width: 480px;
+                margin: 50px auto;
+                padding: 8px;
+                background-color: #27d843;
+              }
+              #drop-area {
+                border: 2px dashed #fff;
+                border-radius: 16px;
+                padding: 20px;
+              }
+              #drop-area.highlight {
+                border: 2px solid yellow;
+              }
+              p {
+                margin-top: 0;
+              }
+              .my-form {
+                color: white;
+                text-align: center;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                width: 100%;
+              }
+              #gallery {
+                margin-top: 10px;
+                display: none;
+              }
+              #gallery img {
+                width: 150px;
+                margin-bottom: 10px;
+                margin-right: 10px;
+                vertical-align: middle;
+              }
+              .button {
+                display: inline-block;
+                padding: 10px;
+                color: black;
+                background: #eee;
+                cursor: pointer;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+              }
+              .button:hover {
+                background: #ddd;
+              }
+              #fileElem {
+                display: none;
+              }
+            </style>
+            <div id="drop-area-surround">
+              <div id="drop-area">
+                <form class="my-form">
+                  <div>
+                    Drag & Drop to<br />
+                    Upload File
+                  </div>
+
+                  <div>
+                    OR
+                  </div>
+
+                  <div>
+                    <input type="file" id="fileElem" accept=".csv" />
+                    <label class="button" for="fileElem">Browse File</label>
+                  </div>
+                </form>
+              </div>
+            </div>
+          `;
+        }
+
+        connectedCallback() {
+          const root = this.shadowRoot;
+          function setupLoader(element, callback) {
+            let dropArea = root.getElementById(element);
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+              dropArea.addEventListener(eventName, preventDefaults, false)
+              document.body.addEventListener(eventName, preventDefaults, false)
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+              dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false)
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+              dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false)
+            });
+            dropArea.addEventListener('drop', handleDrop, false)
+            dropArea.querySelector('input[type=file]').addEventListener('change', function() {
+              handleFiles(this.files);
+              this.value = null;
+            });
+            function preventDefaults(e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            function handleDrop(e) {
+              var dt = e.dataTransfer;
+              var files = dt.files;
+              handleFiles(files);
+            }
+            function handleFiles(files) {
+              files = [...files];
+              files.forEach(previewFile);
+            }
+            function previewFile(file) {
+              let reader = new FileReader();
+              reader.readAsText(file);
+              reader.onloadend = function() {
+                callback({
+                  txt: reader.result,
+                  name: file.name,
+                });
+              }
+            }
+          }
+          const processAddition = (addition) => {
+            const {txt, name} = addition;
+            const event = new CustomEvent('file-changed', {
+              detail : {
+                data: txt,
+                name,
+              }
+            });
+            this.dispatchEvent(event);
+          }
+          setupLoader('drop-area', processAddition);
+        }
+      }
+      customElements.define('csv-drop', CsvDrop);
+    </script>
+
+    <csv-drop id="csv-drop"></csv-drop>
+    <script>
+      const csvDrop = document.getElementById("csv-drop");
+      csvDrop.addEventListener("file-changed", (e) => {
+        previewInGrist({
+          initialContent: e.detail.data,
+          singlePage: true
+        });
+      });
+    </script>
+  </p>
+
+  <p>
+    Can also be easily embedded as a plain HTML element.
+    <csv-viewer initial-file="investment-research.grist" name="Investment" style="height: 500px; border: 1px solid black"></csv-viewer>
+  </p>
+</body>
+
+</html>

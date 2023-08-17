@@ -12,10 +12,10 @@ settings.bootstrapGristPrefix = bootstrapGristPrefix;
 function bootstrapGrist(options) {
   const bootstrapGristLocation = options.pageLocation || window.location.href;
   const bootstrapGristSourceAbsolute = new URL(bootstrapGristSource).href;
-  if (options.elementId) {
+  if (options.elementId || options.element) {
     // Grist should be opened within a page element, and not
     // take over the entire page.
-    let element = document.getElementById(options.elementId);
+    let element = options.element ?? document.getElementById(options.elementId);
     const iframeElement = document.createElement('iframe');
 
     // Prepare nested options. Remove element id, and add the page location
@@ -25,6 +25,7 @@ function bootstrapGrist(options) {
     // nasty could be snuck into the location?
     const nestedOptions = {...options};
     delete nestedOptions.elementId;
+    delete nestedOptions.element;
     nestedOptions.pageLocation = bootstrapGristLocation;
     function escapeJsonForScript(jsonString) {
       return jsonString.replace(/\\/g, '\\\\')
@@ -75,7 +76,9 @@ function bootstrapGrist(options) {
   if (seedFile) {
     settings.seedFile = new URL(seedFile, bootstrapGristLocation);
   }
-  if (options.initialData) {
+  if (options.initialContent) {
+    settings.initialContent = options.initialContent;
+  } else if (options.initialData) {
     settings.initialData = options.initialData;
   }
   const fakeDocId = "new~2d6rcxHotohxAuTxttFRzU";
@@ -141,11 +144,70 @@ function bootstrapGrist(options) {
     asset.setAttribute('href', prefix + src);
     document.body.appendChild(asset);
   }
+
   for (const src of js) {
     const asset = document.createElement('script');
     asset.setAttribute('crossorigin', 'anonymous');
     asset.setAttribute('src', prefix + src);
     asset.async = false;
     document.body.appendChild(asset);
+  }
+
+  // Sometimes the file takes a while to load, so we show a loader. Currently it is only used on a popup.
+  if (options.loader) {
+    const loader = document.createElement('div');
+    loader.id = 'grist-static-loader';
+    // This loader is almost identical to the one in the main app (see core/static/app.html).
+    // Differences:
+    // - It has different id, so it doesn't get removed by the main app.
+    // - Few styles added (z-index, background-color, font-size, line-height, font-family)
+    loader.innerHTML = `
+      <style>
+        #grist-static-loader {
+          position: absolute;
+          width: 100vw;
+          height: 100vh;
+          display: flex;
+          z-index: 1;
+          background-color: var(--color-logo-bg, #42494b);
+          /* Fonts are styled later and this element relies on the font size. Otherwise there is a slight size shift */
+          font-size: 16px;
+          line-height: 22px;
+          font-family: sans;
+        }
+        html, body {
+          overflow: hidden;
+          margin: 0;
+          padding: 0;
+        }
+      </style>
+      <div class='grist-logo'>
+        <div class='grist-logo-head'>
+          <div class='grist-logo-grain grain-empty'></div>
+          <div class='grist-logo-grain grain-col grain-flip grain-2'></div>
+          <div class='grist-logo-grain grain-col grain-3'></div>
+        </div>
+        <div class='grist-logo-row'>
+          <div class='grist-logo-grain grain-row grain-flip grain-4'></div>
+          <div class='grist-logo-grain grain-cell grain-flip grain-5'></div>
+          <div class='grist-logo-grain grain-cell grain-6'></div>
+        </div>
+        <div class='grist-logo-row'>
+          <div class='grist-logo-grain grain-row grain-flip grain-7'></div>
+          <div class='grist-logo-grain grain-cell grain-flip grain-8'></div>
+          <div class='grist-logo-grain grain-cell grain-9'></div>
+        </div>
+      </div>
+    `;
+    loader.id = 'grist-static-loader';
+    document.body.appendChild(loader);
+    // Remove this loader once gristdoc is shown.
+    const observer = new MutationObserver(() => {
+      if (document.querySelector('.test-gristdoc')) {
+        loader.remove();
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, {childList: true});
   }
 }
