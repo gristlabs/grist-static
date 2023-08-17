@@ -23,8 +23,8 @@
       this.initiated = true;
       // Also support the href attribute, which is easier to use.
       const href = this.getAttribute('href');
-      const csvHref = href?.endsWith('.csv') ? href : undefined;
-      const gristHref = href?.endsWith('.grist') ? href : undefined;
+      const csvHref = href?.toLowerCase().endsWith('.csv') ? href : undefined;
+      const gristHref = href?.toLowerCase().endsWith('.grist') ? href : undefined;
       const initialFile = this.getAttribute('initial-file') || gristHref;
       const name = this.getAttribute('name') || "";
       const initialData = this.getAttribute('initial-data') || csvHref;
@@ -118,10 +118,10 @@
       refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ||
       refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open');
 
-    const hasExtension = href.toLowerCase().endsWith('.csv') || href.toLowerCase().endsWith('.grist');
+    const hasExtension = href?.toLowerCase().endsWith('.csv') || href?.toLowerCase().endsWith('.grist');
     let initAttribute = null;
     if (hasExtension) {
-      initAttribute = href.toLowerCase().endsWith('.csv') ? 'initialData' : 'initialFile';
+      initAttribute = href?.toLowerCase().endsWith('.csv') ? 'initialData' : 'initialFile';
     } else {
       initAttribute = refElement.hasAttribute('data-initial-file') || refElement.hasAttribute('data-grist-doc-open') ? 'initialFile' :
                       refElement.hasAttribute('data-initial-data') || refElement.hasAttribute('data-grist-csv-open') ? 'initialData' :
@@ -135,6 +135,7 @@
   }
 
   window.previewInGrist = previewInGrist;
+
 
   // ##################### Default styles for buttons #####################
 
@@ -169,154 +170,4 @@
     document.head.appendChild(styleElement);
     return styleElement;
   }
-
-
-  // ##################### CSV drop #####################
-
-
-  class CsvDrop extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({mode: 'open'});
-      this.shadowRoot.innerHTML = `
-        <style>
-          :host {
-            font-family: sans-serif;
-            display: block;
-          }
-          #drop-area-surround {
-            border-radius: 24px;
-            padding: 20px;
-            width: 480px;
-            margin: 50px auto;
-            padding: 8px;
-            background-color: #27d843;
-          }
-          #drop-area {
-            border: 2px dashed #fff;
-            border-radius: 16px;
-            padding: 20px;
-          }
-          #drop-area.highlight {
-            border: 2px solid yellow;
-          }
-          p {
-            margin-top: 0;
-          }
-          .my-form {
-            color: white;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
-          }
-          #gallery {
-            margin-top: 10px;
-            display: none;
-          }
-          #gallery img {
-            width: 150px;
-            margin-bottom: 10px;
-            margin-right: 10px;
-            vertical-align: middle;
-          }
-          .button {
-            display: inline-block;
-            padding: 10px;
-            color: black;
-            background: #eee;
-            cursor: pointer;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-          }
-          .button:hover {
-            background: #ddd;
-          }
-          #fileElem {
-            display: none;
-          }
-        </style>
-        <div id="drop-area-surround">
-          <div id="drop-area">
-            <form class="my-form">
-              <div>
-                Drag & Drop to<br />
-                Upload File
-              </div>
-
-              <div>
-                OR
-              </div>
-
-              <div>
-                <input type="file" id="fileElem" accept=".csv" />
-                <label class="button" for="fileElem">Browse File</label>
-              </div>
-            </form>
-          </div>
-        </div>
-      `;
-    }
-
-    connectedCallback() {
-      const root = this.shadowRoot;
-      function setupLoader(element, callback) {
-        let dropArea = root.getElementById(element);
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-          dropArea.addEventListener(eventName, preventDefaults, false)
-          document.body.addEventListener(eventName, preventDefaults, false)
-        });
-        ['dragenter', 'dragover'].forEach(eventName => {
-          dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false)
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-          dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false)
-        });
-        dropArea.addEventListener('drop', handleDrop, false)
-        dropArea.querySelector('input[type=file]').addEventListener('change', function() {
-          handleFiles(this.files);
-          this.value = null;
-        });
-        function preventDefaults(e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        function handleDrop(e) {
-          var dt = e.dataTransfer;
-          var files = dt.files;
-          handleFiles(files);
-        }
-        function handleFiles(files) {
-          files = [...files];
-          files.forEach(previewFile);
-        }
-        function previewFile(file) {
-          let reader = new FileReader();
-          reader.readAsText(file);
-          reader.onloadend = function() {
-            callback({
-              txt: reader.result,
-              name: file.name,
-            });
-          }
-        }
-      }
-      const processAddition = (addition) => {
-        const {txt, name} = addition;
-        const event = new CustomEvent('file-changed', {
-          detail : {
-            data: txt,
-            name,
-          }
-        });
-        this.dispatchEvent(event);
-      }
-      setupLoader('drop-area', processAddition);
-    }
-  }
-
-  customElements.define('csv-drop', CsvDrop);
 })();

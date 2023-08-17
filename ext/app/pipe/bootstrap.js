@@ -157,6 +157,10 @@ function bootstrapGrist(options) {
   if (options.loader) {
     const loader = document.createElement('div');
     loader.id = 'grist-static-loader';
+    // This loader is almost identical to the one in the main app (see core/static/app.html).
+    // Differences:
+    // - It has different id, so it doesn't get removed by the main app.
+    // - Few styles added (z-index, background-color, font-size, line-height, font-family)
     loader.innerHTML = `
       <style>
         #grist-static-loader {
@@ -166,7 +170,7 @@ function bootstrapGrist(options) {
           display: flex;
           z-index: 1;
           background-color: var(--color-logo-bg, #42494b);
-          /* Fonts are dowloaded later and this element relies on the font size */
+          /* Fonts are styled later and this element relies on the font size. Otherwise there is a slight size shift */
           font-size: 16px;
           line-height: 22px;
           font-family: sans;
