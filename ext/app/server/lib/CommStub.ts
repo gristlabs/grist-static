@@ -175,7 +175,8 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     // This is hack to fix a bug in FF https://bugzilla.mozilla.org/show_bug.cgi?id=1741489, and shouldn't
     // affect other browsers.
     // TODO: add test for it.
-    const fetch = (window.parent === window) ? window.fetch : window.parent.fetch;
+    const inSrcDoc = Boolean(window.frameElement?.getAttribute('srcdoc'));
+    const fetch = inSrcDoc ? window.parent.fetch : window.fetch;
     const response = await fetch(initialDataUrl);
     if (!response.ok) {
       throw new Error(`Failed to load initial data from ${initialDataUrl}: ${response.statusText}`);
