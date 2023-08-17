@@ -43,7 +43,12 @@ export class JsDatabase implements MinDB {
           const seedFile = path !== ':memory:' ? gristOverrides.seedFile : '';
           let seed: Uint8Array|undefined;
           if (seedFile) {
-            const resp = await window.fetch(seedFile);
+            // If we are in a iframe, we need to use the parent window to fetch the data.
+            // This is hack to fix a bug in FF https://bugzilla.mozilla.org/show_bug.cgi?id=1741489, and shouldn't
+            // affect other browsers.
+            // TODO: add test for it.
+            const fetch = (window.parent === window) ? window.fetch : window.parent.fetch;
+            const resp = await fetch(seedFile);
             if (!resp.ok) {
               throw new Error(seedFile + ": " + resp.statusText);
             }
