@@ -114,7 +114,7 @@
     const singlePage = refElement.hasAttribute('data-single-page');
     // Allow all settings for the URL in that order. Href accepts both format and is easier to use.
     const href =
-      refElement.getAttribute('href') ||
+      (refElement.getAttribute('href') !== "#" ? refElement.getAttribute("href") : null) ||
       refElement.getAttribute('data-initial-file') || refElement.getAttribute('data-grist-doc-open') ||
       refElement.getAttribute('data-initial-data') || refElement.getAttribute('data-grist-csv-open');
 

@@ -57,10 +57,73 @@ Browsers don't have native support for Grist [yet :-)] but you can make a little
   * I've been pushing Grist code to https://grist-static.com/ as a CDN; you can produce it all yourself using this repo.
   * After that, it is just a case of putting a `.grist` file on your server beside this `.html` file, and filing in the options to `bootstrapGrist`.
   * You can also pass `initialData: 'path/to/data.csv'` to import a CSV file into a new table. In this case `initialFile` is optional.
+  * There is also `initialContent` option. You can use it to pass the content of a CSV file.
   * You can also pass `elementId: 'element-id` to open Grist within an element in your page.
     - If using `elementId`, and serving a `.grist` or `.csv` file at a URL that requires cookie-based authentication, be aware that Firefox may not support this yet ([bug report](https://bugzilla.mozilla.org/show_bug.cgi?id=1741489)).
 	- In that case, you can include a small wrapper page for your document as above, and embed it as an iframe yourself.
   * You can set `singlePage: true` for a less busy, single page layout.
+
+
+### No-Code integration
+
+We have a few building blocks ready for you, that makes **embedding** CSV or Grist files as easy as possible.
+In order to use them, first include the `csv-viewer.js` script somewhere near the top of the page. The first one is a custom `csv-viewer` web element.
+
+```html
+<html>
+  <head>
+    <script src="https://grist-static.com/csv-viewer.js"></script>
+  </head>
+  <body>
+    <csv-viewer initial-data="path/to/data.csv" style="height: 500px; border: 1px solid green">
+    </csv-viewer>
+  </body>
+</html>
+```
+
+It allows you to embed CSV file right inside your page, where and how you want it (no JavaScript
+required). It accepts the same set of options as `bootstrapGrist` function, so you can configure it
+to show either a CSV file are a Grist document of your choice. Full list of options available:
+
+- `initial-file`: The initial Grist document to load.
+- `initial-data`: A CSV file to import.
+- `initial-content`: A content of a CSV file to import.
+- `name`: The name of the Grist document to use.
+- `single-page`: A boolean attribute that, when present, displays the document in a less busy, single page layout.
+- `loader`: A boolean attribute that, when present, displays a loading spinner while the document is loading.
+
+#### Open with Grist button
+
+For a busy page, you can easily include external data and show it as a popup:
+
+```html
+<html>
+  <head>
+    <script src="https://grist-static.com/csv-viewer.js"></script>
+  </head>
+  <body>
+    Here is a <button data-grist-csv-open="path/to/report">financial report</button> for the current year.
+
+    Here is the same <a data-grist-csv-open="path/to/report" href="#">report</a> as a link.
+  </body>
+</html>
+```
+
+Any element can be converted to a link that opens a popup with a CSV file. All you need to do is to add `data-grist-csv-open` attribute to it. You can also use `data-grist-doc-open` to open a Grist document.
+As with <csv-viewer> component, you can pass additional options to it, like:
+* `data-single-page` for a single page layout,
+* `data-name` to override the default document name,
+* `data-loader` to show a loading spinner while the document is loading. This is enabled by default,
+pass `data-loader="false"` to disable it.
+
+
+You can also used a predefined button's classes, like `grist` or `grist-large`, to reuse Grist's 
+default styling.
+
+
+For finer control, there is a global `previewInGrist` function with the same API as `bootstrapGrist`,
+but instead of rendering inline it opens a preview in a popup. This might be useful for any dynamically created content or a files that are not available at the time of page load.
+
 
 ## Differences with regular Grist
 
