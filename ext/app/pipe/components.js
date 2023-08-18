@@ -50,11 +50,10 @@
   // Adds a global click handler for elements that should open a Grist document in a popup.
 
   window.addEventListener('click', (clickEvent) => {
-    if (!clickEvent.target.matches('[data-grist-csv-open],[data-grist-doc-open]')) {
-      return;
-    }
+    const target = clickEvent.target?.closest?.('[data-grist-csv-open],[data-grist-doc-open]');
+    if (!target) {return;}
     clickEvent.preventDefault();
-    previewInGristClickHandler(clickEvent.target);
+    previewInGristClickHandler(target);
   });
 
 
