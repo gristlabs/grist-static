@@ -7,26 +7,26 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-  <script src="https://grist-static.com/latest.js"></script>
+  <script src="https://grist-static.com/csv-viewer.js"></script>
 </head>
 <body>
 
 <div class="jumbotron text-center">
   <h1>grist-static</h1>
-  <p>A standalone viewer for <code>.grist</code> files on your website</p>
+  <p>A standalone viewer for <code>.grist</code> (and <code>.csv</code>) files on your website</p>
 </div>
 
 <div class="container">
   <div class="row mb-5">
     <div class="col-sm-4">
       <h3>Example 1</h3>
-      <p><a href="investment-research.html"><img class="img-fluid" src="https://grist-static.com/icons/investment-research.jpg"></a></p>
-      <p><a href="investment-research.html">investment-research.grist</a>, drill down, summarize data.</p>
+      <p><a data-name="Investment Research" data-grist-doc-open href="investment-research.grist"><img class="img-fluid" src="https://grist-static.com/icons/investment-research.jpg"></a></p>
+      <p><a data-name="Investment Research" data-grist-doc-open href="investment-research.grist">investment-research.grist</a>, drill down, summarize data.</p>
     </div>
     <div class="col-sm-4">
       <h3>Example 2</h3>
-      <p><a href="flashcards.html"><img class="img-fluid" src="https://grist-static.com/icons/flashcards.jpg"></a></p>
-      <p><a href="flashcards.html">flashcards.grist</a>, using custom widgets.</p>
+      <p><a data-single-page data-name="Flash Cards" data-grist-doc-open href="flashcards.grist"><img class="img-fluid" src="https://grist-static.com/icons/flashcards.jpg"></a></p>
+      <p><a data-single-page data-name="Flash Cards" data-grist-doc-open href="flashcards.grist">flashcards.grist</a>, using custom widgets.</p>
     </div>
     <div class="col-sm-4">
       <h3>Example 3</h3>
@@ -37,17 +37,25 @@
 
   <div class="row">
     <div class="col-sm-4">
-      Use Grist as the PDF of data:
+      Use <a href="https://getgrist.com">Grist</a> as the PDF of data:
       <ul>
         <li>
           Publish your annual report and
-          interactive spreadsheets side by side.
+          interactive spreadsheets side by side,
+          on your site, without any special services needed.
         </li>
         <li>
           Have the data behind your article on hand for readers
           to explore.
         </li>
       </ul>
+      <p>
+        No special server is needed for <code>grist-static</code>,
+        it works straight from a CDN or any standard web server.
+      </p>
+      <p>
+        Grist can also view <code>.csv</code> files: <button data-grist-csv-open="products.csv" data-single-page class="btn btn-primary">products.csv</button>
+      </p>
       <p>
         Learn more: <a href="https://github.com/gristlabs/grist-static">github.com/gristlabs/grist-static</a>
       </p>
@@ -62,6 +70,7 @@
     &lt;title&gt;100% browser-based Grist&lt;/title&gt;
   &lt;/head&gt;
   &lt;body&gt;
+    &lt;div id="were-div"&gt;&lt;/div&gt;
     &lt;script&gt;
       bootstrapGrist({
         initialFile: 'weresheet.grist',   // optional path to .grist
@@ -75,36 +84,6 @@
       <button id="were-click" class="btn btn-primary">Run this code</button>
     </div>
   </div>
-
-  <div class="row mb-5">
-    <div class="col-sm-8">
-      <div class="mb-3">
-        We are experimenting with supporting other formats such as
-        CSV. You can specify `initialData` and have a CSV file loaded,
-        with types autodetected.  This is currently slow, since the
-        full Grist data engine must load before you see anything at
-        all, and we haven't optimized that process yet. Watch this
-        space.
-      </div>
-      <pre id="csv-div"><code class="language-html">&lt;!doctype html&gt;
-&lt;html&gt;
-  &lt;head&gt;
-    &lt;meta charset=&quot;utf8&quot;&gt;
-    &lt;script src=&quot;https://grist-static.com/latest.js&quot;&gt;&lt;/script&gt;
-  &lt;/head&gt;
-  &lt;body&gt;
-    &lt;script&gt;
-      bootstrapGrist({
-        initialData: 'products.csv',
-        singlePage: true
-      });
-    &lt;/script&gt;
-  &lt;/body&gt;
-&lt;/html&gt;</code></pre>
-      <button id="csv-click" class="btn btn-primary">Run this code</button>
-    </div>
-  </div>
-
 </div>
 
 <script>
@@ -122,20 +101,6 @@
       singlePage: true
     });
     document.getElementById('were-click').style.display = 'none';
-    return false;
-  });
-  document.getElementById('csv-click').addEventListener('click', function() {
-    const div = document.getElementById('csv-div');
-    div.style.height = '500px';
-    div.style.padding = '0';
-    div.style.border = '1px solid gray';
-    div.style.overflow = 'hidden';
-    bootstrapGrist({
-      initialData: 'products.csv',
-      elementId: 'csv-div',
-      singlePage: true
-    });
-    document.getElementById('csv-click').style.display = 'none';
     return false;
   });
 </script>
