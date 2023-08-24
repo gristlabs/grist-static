@@ -74,9 +74,19 @@
     console.assert(href, 'Must provide initialFile, initialData or initialContent');
     const initAttribute = options.initialFile ? 'initial-file' : options.initialData ? 'initial-data' : 'initial-content';
     const {name, singlePage} = options;
-    const loader = options.loader === false ? '' : 'loader';
-    popup.innerHTML = `
-      <csv-viewer ${initAttribute}="${href}" name="${name}" ${loader} style="flex: 1" ${singlePage ? 'single-page' : ' '}></csv-viewer>
+
+    const csvNode = document.createElement('csv-viewer');
+    csvNode.setAttribute(initAttribute, href);
+    csvNode.setAttribute('name', name);
+    csvNode.setAttribute('style', 'flex: 1');
+    if (options.loader !== false) {
+      csvNode.setAttribute('loader', '');
+    }
+    if (singlePage) {
+      csvNode.setAttribute('single-page', '');
+    }
+    popup.appendChild(csvNode);
+    popup.innerHTML += `
       <div style="
         font-size: 14px;
         text-align: center;
