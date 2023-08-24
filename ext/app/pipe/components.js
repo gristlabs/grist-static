@@ -120,7 +120,6 @@
   function previewInGristClickHandler(refElement) {
     // Read all the settings from the element.
     const name = refElement.getAttribute('data-name');
-    const singlePage = refElement.hasAttribute('data-single-page');
     // Allow all settings for the URL in that order. Href accepts both format and is easier to use.
     const href =
       (refElement.getAttribute('href') !== "#" ? refElement.getAttribute("href") : null) ||
@@ -140,6 +139,11 @@
 
     // Loader is shown by default, needs an explicit false to disable.
     const loader = refElement.getAttribute('data-loader') === 'false' ? false : true;
+    // singlePage is false if data-single-page is set to false.
+    // Otherwise, it will be true if either data-grist-csv-open or data-single-page is present.
+    // This is complicated, but single page is a much better default for CSV.
+    const singlePage = refElement.getAttribute('data-single-page') === 'false' ? false :
+          (refElement.hasAttribute('data-grist-csv-open') || refElement.hasAttribute('data-single-page'));
     previewInGrist({[initAttribute]: href, name, singlePage, loader});
   }
 
