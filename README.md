@@ -80,7 +80,7 @@ Then you can make a button to open CSV from a URL:
 ```html
 <button data-grist-csv-open="transactions.csv">View CSV</button>
 ```
-The CSV could be a file, or something your site generates for a user dynamically.
+The CSV could be a file, or a URL of CSV data that your site generates for a user dynamically.
 
 If you are working with links rather than buttons, the same approach works:
 
@@ -130,7 +130,7 @@ There are also some predefined button classes, specifically `grist`
 and `grist-large`, that offer Grist's default styling.
 
 For finer control, there is a global `previewInGrist` function with the same API as `bootstrapGrist`,
-but instead of rendering inline it opens a preview in a popup. This might be useful for any dynamically created content or a files that are not available at the time of page load.
+but instead of rendering inline it opens a preview in a popup. This might be useful for any dynamically created content or files that are not available at the time of page load.
 
 ## Differences with regular Grist
 
