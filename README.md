@@ -1,6 +1,6 @@
 # grist-static: Grist on static sites without embeds
 
-This is an experimental way to view and interact with `.grist` files
+This is a way to view and interact with `.grist` files
 (Grist spreadsheets) on regular websites, with no special back-end support needed.
 The idea here is that it would be great for making reports if we could put
 spreadsheets on a website like we do PDFs, with nice formatting
