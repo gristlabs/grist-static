@@ -163,9 +163,8 @@ Sorry this is awkward.
 git submodule update --init
 make requirements
 make build
-make link
-python -m http.server 3030
-# now visit http://localhost:3030/page/index.html
+make serve
+# now visit http://localhost:3030/page/
 ```
 
 The sequence above places a lot of links in the `page`

@@ -60,16 +60,6 @@
   function previewInGrist(options) {
     const popup = document.createElement('div');
     popup.id = 'grist-viewer-popup';
-    popup.style.position = 'fixed';
-    popup.style.top = '0';
-    popup.style.left = '0';
-    popup.style.right = '0';
-    popup.style.bottom = '0';
-    popup.style.zIndex = '1000';
-    popup.style.padding = '60px';
-    popup.style.backgroundColor = /* little black overlay */ 'rgba(0,0,0,0.5)';
-    popup.style.display = 'flex';
-    popup.style.flexDirection = 'column';
     const href = options.initialFile || options.initialData || options.initialContent;
     console.assert(href, 'Must provide initialFile, initialData or initialContent');
     const initAttribute = options.initialFile ? 'initial-file' : options.initialData ? 'initial-data' : 'initial-content';
@@ -87,16 +77,10 @@
     }
     popup.appendChild(csvNode);
     popup.innerHTML += `
-      <div style="
-        font-size: 14px;
-        text-align: center;
-        font-family: monospace;
-        color: white;
-        margin-top: 8px;
-      ">
-        Powered by Grist. <a href="https://getgrist.com" style="color: #16b378">Learn more</a>.
+      <div class="grist-powered-by">
+        Powered by <a href="https://www.getgrist.com/" target="_blank">Grist</a>
       </div>
-      <button style="position: absolute; top: 28px; right: 28px; width: 24px; height: 24px; padding: 0; margin: 0; border: none; background-color: transparent; cursor: pointer;">
+      <button class="grist-close-button">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 6L6 18M6 6l12 12"></path>
         </svg>
@@ -108,7 +92,7 @@
         }
       </style>
     `;
-    popup.querySelector('button').addEventListener('click', () => popup.remove());
+    popup.querySelector('.grist-close-button').addEventListener('click', () => popup.remove());
 
     // Remove any existing popup.
     document.querySelectorAll('#grist-viewer-popup').forEach((el) => el.remove());
@@ -174,6 +158,49 @@
       font-weight: bold;
       padding: 8px 16px;
       min-height: 40px;
+    }
+
+    #grist-viewer-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      padding: 48px;
+      background-color: rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+    }
+    #grist-viewer-popup iframe {
+      border-radius: 6px;
+      box-shadow: 1px 1px 6px 0px rgba(0, 0, 0, 0.5);
+    }
+    #grist-viewer-popup .grist-powered-by {
+      position: absolute;
+      bottom: 28px;
+      right: 48px;
+      line-height: 20px;
+      font-size: 12px;
+      color: #d9d9d9;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Liberation Sans, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+    }
+    #grist-viewer-popup a {
+      color: #16b378;
+      text-decoration: none;
+    }
+    #grist-viewer-popup .grist-close-button {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      margin: 0;
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
     }
   `);
 
