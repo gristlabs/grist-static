@@ -1,7 +1,8 @@
 // Guess at where Grist assets live.
 const settings = window.gristOverrides = {};
 const bootstrapGristSource = document.currentScript?.src;
-const bootstrapGristPrefix = bootstrapGristSource ? new URL('..', bootstrapGristSource).href : '';
+const bootstrapGristRelative = '..';
+const bootstrapGristPrefix = bootstrapGristSource ? new URL(bootstrapGristRelative, bootstrapGristSource).href : '';
 // This next line should be left alone, there is a release script
 // that fiddles with it when prefix is none.
 settings.bootstrapGristPrefix = bootstrapGristPrefix;

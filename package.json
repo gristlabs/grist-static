@@ -1,0 +1,12 @@
+{
+  "name": "grist-static",
+  "version": "0.1.2",
+  "description": "A purely front-end flavor of Grist",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "make requirements && make build && make package"
+  },
+  "repository": "https://github.com/gristlabs/grist-static",
+  "author": "Paul Fitzpatrick <paul@getgrist.com>",
+  "license": "Apache-2.0"
+}
