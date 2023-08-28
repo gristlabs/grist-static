@@ -2,19 +2,36 @@
 
 set -e
 
+# In dist directory, we will lay out files for packaging.
 rm -rf dist
-mkdir dist
 
+# In dist-test directory, we will lay out some test files.
+rm -rf dist-test
+mkdir dist-test
+
+# Copy over main material.
 ./scripts/link_page_resources.sh copy
-cp -r page/static dist/static
+cp -r page/static dist
 for f in $(cd page; ls *.grist *.csv *.html); do
-  ln -s ../page/$f dist/$f
+  ln -s ../page/$f dist-test/$f
 done
 ./scripts/link_page_resources.sh link
 
-cat dist/static/pipe/bootstrap.js | sed "s/^settings.bootstrapGristPrefix = .*/settings.bootstrapGristPrefix = XXX;/" > dist/latest.js
-cat dist/latest.js dist/static/pipe/components.js > dist/csv-viewer.js
+# Remove some unnecessary symlinks that will make s3 syncs fail.
+rm -f dist/mocha.js dist/mocha.css
+
+# Move entry points to top level of dist.
+for f in components.js csv-viewer.js; do
+  cp dist/pipe/$f dist
+done
+sed "s|bootstrapGristRelative = '..'|bootstrapGristRelative = '.'|" < dist/pipe/bootstrap.js  > dist/bootstrap.js
+# Some synonyms of the main entry point.
+cp dist/bootstrap.js dist/index.js
+cp dist/bootstrap.js dist/latest.js
+
+# Make the dist package available for testing in dist-test.
+ln -s ../dist dist-test/static
 
 echo "================================================"
-echo "== Prepared dist/static directory"
-ls dist
+echo "== Prepared dist and dist-test directory"
+ls dist-test

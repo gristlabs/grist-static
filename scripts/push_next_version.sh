@@ -15,15 +15,19 @@ version="experiments/e$n"
 http="https://grist-static.com/$version/"
 s3url="s3://grist-static/$version"
 
-# remove some unnecessary testing stuff that will make sync fail.
-rm -f dist/static/mocha.js dist/static/mocha.css
-# sync
-aws s3 sync dist/static $s3url
+# Some slightly messy file rewriting.
+rm -rf dist-deploy
+mkdir dist-deploy
+cat dist/pipe/bootstrap.js | sed "s/^settings.bootstrapGristPrefix = .*/settings.bootstrapGristPrefix = XXX;/" > dist-deploy/latest.js
+cat dist-deploy/latest.js dist/pipe/components.js > dist-deploy/csv-viewer.js
 
-# point to new version
-cat dist/latest.js | sed "s|XXX|'$http'|" > dist/latest-send.js
-aws s3 cp dist/latest-send.js s3://grist-static/next.js --cache-control max-age=60
+# Send off the bulk of the material.
+aws s3 sync dist $s3url
 
-# same for csv viewer
-cat dist/csv-viewer.js | sed "s|XXX|'$http'|" > dist/csv-viewer-send.js
-aws s3 cp dist/csv-viewer-send.js s3://grist-static/csv-viewer-next.js --cache-control max-age=60
+# Point to new version.
+cat dist-deploy/latest.js | sed "s|XXX|'$http'|" > dist-deploy/latest-send.js
+aws s3 cp dist-deploy/latest-send.js s3://grist-static/next.js --cache-control max-age=60
+
+# Same for csv viewer.
+cat dist-deploy/csv-viewer.js | sed "s|XXX|'$http'|" > dist-deploy/csv-viewer-send.js
+aws s3 cp dist-deploy/csv-viewer-send.js s3://grist-static/csv-viewer-next.js --cache-control max-age=60
