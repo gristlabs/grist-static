@@ -179,7 +179,7 @@
     #grist-viewer-popup .grist-powered-by {
       position: absolute;
       bottom: 28px;
-      right: 48px;
+      width: 100%;
       line-height: 20px;
       font-size: 12px;
       color: #d9d9d9;
