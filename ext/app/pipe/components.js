@@ -78,7 +78,9 @@
     popup.appendChild(csvNode);
     popup.innerHTML += `
       <div class="grist-powered-by">
-        Powered by <a href="https://www.getgrist.com/" target="_blank">Grist</a>
+        Powered by <a
+          href="https://www.getgrist.com/?utm_source=grist-csv-viewer&utm_medium=grist-csv-viewer&utm_campaign=grist-csv-viewer"
+          target="_blank">Grist</a>
       </div>
       <button class="grist-close-button">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -179,6 +181,7 @@
     #grist-viewer-popup .grist-powered-by {
       position: absolute;
       bottom: 28px;
+      left: 0px;
       width: 100%;
       line-height: 20px;
       font-size: 12px;
