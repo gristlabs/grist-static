@@ -173,8 +173,47 @@ files for uploading, use instead:
 
 ```
 make package
-# everything you need is in dist/static
+# everything you need is in dist/
 ```
+
+## Serving all files from your own website or CDN
+
+All HTML examples so far have used `https://grist-static.com/`,
+a domain operated by Grist Labs that only serves static files.
+This domain logs traffic to measure usage, but does not set or track cookies.
+You can copy all needed files to your own website or CDN to keep your
+traffic completely private.
+
+You can get the files needed by:
+
+ * Building from source.
+ * Or by running `npm pack grist-static` to fetch the latest tarball from the NPM registry
+ * Or by visiting https://registry.npmjs.org/grist-static/latest and finding a link to the latest tarball, then downloading it.
+
+Tarballs (`.tgz` files) are a common archive format, with many free
+tools available for unpacking them.
+However you get there, in the end you will have a `dist/` directory
+containing `csv-viewer.js`, `latest.js`, and many other
+files that make up Grist. Place that material where you wish,
+and update your URLs appropriately.
+
+The `jsdelivr` CDN automatically mirrors packages placed on NPM,
+so let's use it as an example. We could replace:
+
+```html
+<script src="https://grist-static.com/csv-viewer.js"></script>
+```
+
+with:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/grist-static@latest/dist/csv-viewer.js"></script>
+```
+
+Of course, this particular change would simply move usage information
+to `jsdelivr.net` rather than `grist-static.com`, but you get
+the idea. Just use the same pattern for wherever you choose to place
+the files.
 
 ## Roadmap
 
