@@ -42,9 +42,8 @@ async function scanFiles() {
   for (const f of files) {
     const src = indexURL + f;
     console.log(`checking for version of ${f} at ${src}`);
-    const head = await fetch(src, { method: 'HEAD' });
-    if (head.ok) {
-      const fileResponse = await fetch(src);
+    const fileResponse = await fetch(src);
+    if (fileResponse.ok) {
       const fileBuffer = await fileResponse.buffer();
       const outputFile = path.join(base, f);
       fs.writeFileSync(outputFile, fileBuffer);
