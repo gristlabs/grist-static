@@ -187,7 +187,7 @@ traffic completely private.
 You can get the files needed by:
 
  * Building from source.
- * Or by running `npm pack grist-static` to fetch the latest tarball from the NPM registry
+ * Or by running `npm pack grist-static` to fetch the latest tarball from the NPM registry.
  * Or by visiting https://registry.npmjs.org/grist-static/latest and finding a link to the latest tarball, then downloading it.
 
 Tarballs (`.tgz` files) are a common archive format, with many free
