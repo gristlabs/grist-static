@@ -21,7 +21,7 @@ self.callExternal = (name, args) => {
 }
 
 async function initPyodide() {
-  const pyodide = await loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/'});
+  const pyodide = await loadPyodide({indexURL: self.urlPrefix + "pyodide/"});
   console.log(pyodide.runPython(`
 import sys
 sys.version

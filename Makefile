@@ -13,6 +13,7 @@ requirements:
 	cd core && yarn run install:python
 	cd core/sandbox/pyodide && make setup
 	cd core/sandbox && ./bundle_as_wheel.sh && cp dist/*.whl pyodide/_build/packages/
+	node scripts/pyodide-pyc-ify.js
 
 update-lock:
 	cd ext && yarn install --modules-folder=../node_modules --verbose

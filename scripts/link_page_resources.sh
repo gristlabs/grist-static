@@ -60,6 +60,7 @@ cd pipe
 transfer ./ ../../../ext/app/pipe/bootstrap.js bootstrap.js
 transfer ./ ../../../ext/app/pipe/components.js components.js
 transfer ./ ../../../ext/app/pipe/csv-viewer.js csv-viewer.js
+transfer ./ ../../../node_modules/pyodide pyodide
 transfer ../../../core/app/server/ ../../sandbox/pyodide/_build/packages packages
 cd ..
 
