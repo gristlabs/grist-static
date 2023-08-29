@@ -20,6 +20,11 @@ done
 # Remove some unnecessary symlinks that will make s3 syncs fail.
 rm -f dist/mocha.js dist/mocha.css
 
+# Remove some duplicates of sql.js not used in front-end.
+rm -rf dist/static/sql.js/dist/
+rm -rf dist/node_modules/sql.js/dist/
+rm -f dist/sql.js/dist/sqljs-all.zip
+
 # Move entry points to top level of dist.
 for f in components.js csv-viewer.js; do
   cp dist/pipe/$f dist
