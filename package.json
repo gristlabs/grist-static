@@ -1,6 +1,6 @@
 {
   "name": "grist-static",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A purely front-end flavor of Grist",
   "main": "dist/index.js",
   "scripts": {
