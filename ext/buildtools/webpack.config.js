@@ -27,8 +27,14 @@ base.resolve.alias = {
   'child_process': 'app/server/lib/childProcessStub',
   'tmp': 'app/server/lib/tmpStub',
   'app/client/components/Comm': 'app/server/lib/CommStub',
-  'app/server/utils/ProxyAgent': 'app/server/lib/ProxyAgentStub',
+  'app/server/lib/ProxyAgent': 'app/server/lib/ProxyAgentStub',
   'app/client/Hooks': 'app/client/HookStub',
+  'app/gen-server/lib/HomeDBManager': 'app/server/lib/HomeDBManagerStub',
+  'piscina': 'app/server/lib/piscina-stub',
+  'app/server/lib/GoogleAuth': 'app/server/lib/GoogleAuthStub',
+  'app/server/lib/GoogleExport': 'app/server/lib/GoogleAuthStub',
+  'app/server/lib/ExportXLSX': 'app/server/lib/ExportXLSXStub',
+  'exceljs': 'exceljs/dist/es5/exceljs.browser.js',
 };
 
 base.resolve.fallback = {

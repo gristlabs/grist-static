@@ -1,7 +1,7 @@
 import * as dispose from 'app/client/lib/dispose';
 import { DocListAPI, OpenLocalDocResult } from 'app/common/DocListAPI';
 import { GristServerAPI } from 'app/common/GristServerAPI';
-import { gristOverrides } from 'app/pipe/GristOverrides';
+import { gristOverrides, MiniExpress } from 'app/pipe/GristOverrides';
 
 import gristy from 'app/server/Doc';
 
@@ -35,6 +35,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
   public ad: any;
   public client: any;
   public session: any;
+  public expressApp: MiniExpress;
 
   protected listenTo: BackboneEvents["listenTo"];            // set by Backbone
   protected trigger: BackboneEvents["trigger"];              // set by Backbone
@@ -74,7 +75,8 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       getTelemetry() { return createDummyTelemetry(); },
     };
     this.dm = new gristy.DocManager(dsm as any, null, null, gs as any);
-    this.ad = new gristy.ActiveDoc(this.dm, 'meep');
+    this.ad = new gristy.ActiveDoc(this.dm, docName);
+    this.dm.addActiveDoc(docName, this.ad);
     (window as any).gristActiveDoc = this.ad;
     //await this.ad.createEmptyDoc({});
     const hasSeed = gristOverrides.seedFile;
@@ -136,7 +138,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
         getCachedAuth() {
           return {
             access: 'owners',
-            docId: 'meep',
+            docId: docName,
             removed: false,
           };
         },
@@ -147,7 +149,8 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       addDocSession: () => this.session
     }, {});
     (window as any).ad = this.ad;
-
+    this.expressApp = gristy.makeApp(this.dm, gs as any, this as any);
+    gristOverrides.expressApp = this.expressApp;
     if (initialContent) {
       await this._loadInitialContent(initialContent);
     } else if (initialDataUrl) {
@@ -336,6 +339,7 @@ async function newFetch(target: string, opts: any) {
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
   const session = (window as any).gristSession;
+  const docId = gristOverrides.fakeDocId || 'unknown';
   if (url.pathname.endsWith('/api/session/access/active')) {
     return {
       status: 200,
@@ -346,7 +350,7 @@ async function newFetch(target: string, opts: any) {
       status: 200,
       json: () => accessAll,
     };
-  } else if (url.pathname.endsWith('/api/docs/new~2d6rcxHotohxAuTxttFRzU')) {
+  } else if (url.pathname.endsWith(`/api/docs/${docId}`)) {
     docInfo.name = gristOverrides.staticGristOptions?.name || docInfo.name;
     return {
       status: 200,
@@ -357,17 +361,17 @@ async function newFetch(target: string, opts: any) {
       status: 200,
       json: () => [],
     };
-  } else if (url.pathname.endsWith('/api/docs/new~tTzg3iGWsXq7Q6hSXGb94j/snapshots')) {
+  } else if (url.pathname.endsWith(`/api/docs/${docId}/snapshots`)) {
     return {
       status: 200,
       json: () => ({ snapshots: [] }),
     };
-  } else if (url.pathname.endsWith('/api/docs/new~tTzg3iGWsXq7Q6hSXGb94j/snapshots')) {
+  } else if (url.pathname.endsWith(`/api/docs/${docId}/snapshots`)) {
     return {
       status: 200,
       json: () => ({ snapshots: [] }),
     };
-  } else if (url.pathname.endsWith('/api/docs/new~tTzg3iGWsXq7Q6hSXGb94j/usersForViewAs')) {
+  } else if (url.pathname.endsWith(`/api/docs/${docId}/usersForViewAs`)) {
     // Linked-As parameters should not be sent - really need a separate
     // request based object.
     const result = await activeDoc.getUsersForViewAs({
