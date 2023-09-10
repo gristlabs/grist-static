@@ -4,6 +4,4 @@ class PiscinaStub {
   public static isWorkerThread = false;
 }
 
-console.log(workerExporter);
-
 export default PiscinaStub;
