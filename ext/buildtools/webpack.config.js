@@ -58,6 +58,19 @@ base.resolve.fallback = {
   "react-native-sqlite-storage": false,
 };
 
+// There's something a little off in source maps in some exceljs
+// dependencies - tell webpack we don't care.
+const sourceMapLoader = base.module.rules[1];
+if (sourceMapLoader.use[0] !== 'source-map-loader') {
+  throw new Error('cannot find source map loader');
+}
+sourceMapLoader.exclude = [
+  /node_modules\/fast-csv/,
+  /node_modules\/saxes/,
+  /node_modules\/xmlchars/,
+  /node_modules\/@fast-csv/
+];
+
 const webworker = {
   ...base,
   target: 'webworker',

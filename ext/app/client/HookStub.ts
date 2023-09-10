@@ -2,6 +2,7 @@ import { defaultHooks, IHooks } from 'app/client/DefaultHooks';
 import { IGristUrlState } from 'app/common/gristUrls';
 import { getGristConfig } from 'app/common/urlUtils';
 import { gristOverrides } from 'app/pipe/GristOverrides';
+import { IAttrObj } from 'grainjs';
 
 export const hooks: IHooks = {
   ...defaultHooks,
@@ -14,7 +15,7 @@ export const hooks: IHooks = {
     postEncode,
     preDecode,
   },
-  link,
+  maybeModifyLinkAttrs,
 };
 
 function fetcher(...args: any[]) {
@@ -173,13 +174,13 @@ function gristDownloadLink(element: any) {
 /**
  * Redirect download links to a new, in-browser implementation.
  */
-function link(originalLink: Record<string, any>) {
-  if (originalLink.download === undefined) {
-    return originalLink;
+function maybeModifyLinkAttrs(originalAttrs: IAttrObj) {
+  if (originalAttrs.download === undefined) {
+    return originalAttrs;
   }
-  const newLink = {...originalLink};
-  newLink.onclick = "return gristDownloadLink(this)";
-  delete newLink.target;
-  delete newLink.download;
-  return newLink;
+  const newAttrs = {...originalAttrs};
+  newAttrs.onclick = "return gristDownloadLink(this)";
+  delete newAttrs.target;
+  delete newAttrs.download;
+  return newAttrs;
 }
