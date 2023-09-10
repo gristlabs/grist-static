@@ -101,7 +101,7 @@ interface DownloadInfo {
  */
 async function downloadInBrowser(downloadInfo: DownloadInfo) {
   const {data, name, type} = downloadInfo;
-  const blob = new Blob([data], { type });
+  const blob = new Blob([data], {type});
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
