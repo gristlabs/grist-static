@@ -67,7 +67,11 @@
 
     const csvNode = document.createElement('csv-viewer');
     csvNode.setAttribute(initAttribute, href);
-    csvNode.setAttribute('name', name);
+    // Pass along name attribute only if set (be careful not to set it
+    // to the string 'null')
+    if (name) {
+      csvNode.setAttribute('name', name);
+    }
     csvNode.setAttribute('style', 'flex: 1');
     if (options.loader !== false) {
       csvNode.setAttribute('loader', '');
