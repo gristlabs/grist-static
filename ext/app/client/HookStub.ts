@@ -121,6 +121,10 @@ async function fetchFromDocApi(href: string): Promise<DownloadInfo> {
     // Not expected.
     throw new Error('fetchFromDocApi needs homeUrl');
   }
+  if (!href.startsWith(config.homeUrl)) {
+    // Not expected.
+    throw new Error('Endpoint does not have expected base URL');
+  }
   const pathname = '/' + href.split(config.homeUrl)[1];
 
   // Use a simulated router to run the "back-end" code.
