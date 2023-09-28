@@ -99,8 +99,7 @@ interface DownloadInfo {
  * or button, or the browser will deny a simulated click
  * used in the implementation.
  */
-async function downloadInBrowser(downloadInfo: DownloadInfo) {
-  const {data, name, type} = downloadInfo;
+async function downloadInBrowser({data, name, type}: DownloadInfo) {
   const blob = new Blob([data], {type});
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -143,6 +142,7 @@ async function fetchFromDocApi(href: string): Promise<DownloadInfo> {
   const prefix = 'attachment; filename="';
   let name = String(res.headers?.['Content-Disposition'] || '');
   if (name.startsWith(prefix)) {
+    // Remove the prefix and the closing double quote
     name = name.slice(prefix.length, name.length - 1);
   }
   name = name || res.name || 'download';
