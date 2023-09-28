@@ -82,43 +82,43 @@ function bootstrapGrist(options) {
   } else if (options.initialData) {
     settings.initialData = options.initialData;
   }
-  const fakeDocId = "new~2d6rcxHotohxAuTxttFRzU";
-  const fakeUrl = "https://example.com/o/docs/doc/new~2d6rcxHotohxAuTxttFRzU";
+  const fakeDocId = "new~tTzg3iGWsXq7Q6hSXGb94j";
+  const fakeUrl = `https://example.com/o/docs/doc/${fakeDocId}`;
   settings.fakeUrl = fakeUrl;
   settings.fakeDocId = fakeDocId;
   if (options.singlePage) {
     settings.singlePage = Boolean(options.singlePage);
   }
   window.gristConfig = {
-    "homeUrl":homeUrl,
-    "org":"docs",
-    "baseDomain":null,
-    "singleOrg":null,
-    "helpCenterUrl":"https://support.getgrist.com",
-    "pathOnly":true,
-    "supportAnon":false,
-    "supportEngines":null,
-    "hideUiElements":["helpCenter", "billing", "templates", "multiSite", "multiAccounts"],
-    "pageTitleSuffix":null,
-    "pluginUrl":"http://plugins.invalid",
-    "stripeAPIKey":null,
-    "googleClientId":null,
-    "googleDriveScope":null,
-    "helpScoutBeaconId":null,
-    "maxUploadSizeImport":null,
-    "maxUploadSizeAttachment":null,
-    "timestampMs":1678573297305,
-    "enableWidgetRepository":true,
-    "survey":false,
-    "tagManagerId":null,
-    "activation":{"isManager":false},
-    "enableCustomCss":false,
-    "supportedLngs":["de","en","es","fr","nb_NO","pt_BR"],
-    "namespaces":["client","server"],
-    "featureComments":false,
-    "supportEmail":"support@getgrist.com",
-    "assignmentId":"new~2d6rcxHotohxAuTxttFRzU",
-    "plugins":[]
+    "homeUrl": homeUrl,
+    "org": "docs",
+    "baseDomain": null,
+    "singleOrg": null,
+    "helpCenterUrl": "https://support.getgrist.com",
+    "pathOnly": true,
+    "supportAnon": false,
+    "supportEngines": null,
+    "hideUiElements": ["helpCenter", "billing", "templates", "multiSite", "multiAccounts"],
+    "pageTitleSuffix": null,
+    "pluginUrl": "http://plugins.invalid",
+    "stripeAPIKey": null,
+    "googleClientId": null,
+    "googleDriveScope": null,
+    "helpScoutBeaconId": null,
+    "maxUploadSizeImport": null,
+    "maxUploadSizeAttachment": null,
+    "timestampMs": 1678573297305,
+    "enableWidgetRepository": true,
+    "survey": false,
+    "tagManagerId": null,
+    "activation": {"isManager":false},
+    "enableCustomCss": false,
+    "supportedLngs": ["de","en","es","fr","nb_NO","pt_BR"],
+    "namespaces": ["client","server"],
+    "featureComments": false,
+    "supportEmail": "support@getgrist.com",
+    "assignmentId": fakeDocId,
+    "plugins": []
   };
 
   const css = [

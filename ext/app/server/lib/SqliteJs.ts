@@ -34,14 +34,40 @@ async function getSql() {
 
 export const sql = getSql();
 
+/**
+ * Keep track of the database that corresponds to the Grist document.
+ */
+let mainDB: SqlJs.Database|null;
+
+/**
+ * Store all databases, specifically a modified copy we may make for
+ * downloading.
+ * (There are browser implementations of filesystems we could use,
+ * and probably will at some point for imports, but specifically for
+ * dealing with SQLite in JS they won't help since the db isn't tied
+ * to a file in the same way it is on the back-end.)
+ */
+export const virtualFileSystem: Map<string, Uint8Array> = new Map();
+
 export class JsDatabase implements MinDB {
   private db: Promise<SqlJs.Database>;
-  constructor(path: string, mode: any, cb: (err: any, v?: any) => void) {
+  constructor(public path: string, mode: any, cb: (err: any, v?: any) => void) {
     this.db = new Promise<SqlJs.Database>((resolve, reject) => {
       sql.then(async sql => {
         try {
-          const seedFile = path !== ':memory:' ? gristOverrides.seedFile : '';
+          let seedFile = path !== ':memory:' ? gristOverrides.seedFile : '';
           let seed: Uint8Array|undefined;
+          if (path === 'copy') {
+            // If loading from the special file "copy", go ahead and
+            // use anything already in our "virtualFileSystem", or
+            // copy from the first db we opened.
+            seedFile = '';
+            if (virtualFileSystem.has('copy')) {
+              seed = virtualFileSystem.get('copy')!;
+            } else if (mainDB) {
+              seed = mainDB.export();
+            }
+          }
           if (seedFile) {
             // If we are in a iframe, we need to use the parent window to fetch the data.
             // This is hack to fix a bug in FF https://bugzilla.mozilla.org/show_bug.cgi?id=1741489, and shouldn't
@@ -59,6 +85,9 @@ export class JsDatabase implements MinDB {
           }
 
           const db = new sql.Database(seed);
+          if (path !== ':memory:' && path !== 'copy') {
+            mainDB = db;
+          }
           (db as any).create_aggregate('grist_marshal', {
             init: gristMarshal.initialize,
             step: {
@@ -83,6 +112,9 @@ export class JsDatabase implements MinDB {
     });
   }
   async close() {
+    if (this.path === 'copy') {
+      virtualFileSystem.set(this.path, (await this.db).export());
+    }
     (await this.db).close();
   }
   async run(sql: string, ...params: any[]) {

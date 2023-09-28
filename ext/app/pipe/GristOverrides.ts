@@ -24,6 +24,9 @@ export interface GristOverrides {
   fakeUrl?: string;
   fakeDocId?: string;
   singlePage?: boolean;
+
+  // A hook to the document's REST API.
+  expressApp?: MiniExpress;
 }
 
 export function getGristOverrides(): GristOverrides {
@@ -32,3 +35,32 @@ export function getGristOverrides(): GristOverrides {
 }
 
 export const gristOverrides = getGristOverrides();
+
+/**
+ * A bare-bones implementation of Express. Call run with a http request
+ * method and path (e.g. /api/docs/DOCID/download/xlsx), and get back
+ * information about what the "back-end" code for that endpoint did.
+ */
+export interface MiniExpress {
+  run(options: {method: string, path: string}): Promise<ResponseInfo>;
+}
+
+/**
+ * A grab-bag of information about a response.
+ */
+export interface ResponseInfo {
+  // Keeps track of any res.set(key, val) calls.
+  sets: Record<string, any>;
+
+  // Keeps track of any res.setHeader(key, val) calls.
+  headers: Record<string, any>;
+
+  // Keeps track of material from a res.send() or a res.download().
+  data: any;
+
+  // Keeps track of a res.type() call.
+  type?: string;
+
+  // Set from a res.download() call.
+  name?: string;
+}
