@@ -332,7 +332,7 @@ const docInfo = {
   "trunkAccess": "owners"
 };
 
-const widgetRepo = buildWidgetRepository();
+const widgetRepo = buildWidgetRepository(null as any);
 
 async function newFetch(target: string, opts: any) {
   console.log('newFetch', { target, opts });
