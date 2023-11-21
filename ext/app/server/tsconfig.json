@@ -9,6 +9,7 @@
     "../../../stubs/app/server/declarations.d.ts",
     "../../../stubs/app/server/server.ts",
     "../../../stubs/app/server/logins.ts",
+    "../../../stubs/app/server/prometheus-exporter.ts",
     "../../../stubs/app/server/lib/TelemetryManager.ts",
     "../pipe/webworker.js",
     "../pipe/package_filenames.json"
