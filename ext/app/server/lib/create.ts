@@ -76,6 +76,10 @@ class PyodideSandbox implements ISandbox {
 
   async reportMemoryUsage() {
   }
+
+  getFlavor() { return 'pyodide'; }
+
+  isProcessDown() { return false; }
 }
 
 export const create: ICreate = {

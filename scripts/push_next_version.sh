@@ -22,7 +22,11 @@ cat dist/pipe/bootstrap.js | sed "s/^settings.bootstrapGristPrefix = .*/settings
 cat dist-deploy/latest.js dist/pipe/components.js > dist-deploy/csv-viewer.js
 
 # Send off the bulk of the material.
-aws s3 sync dist $s3url
+aws s3 sync dist $s3url || {
+  # Give an error message if this command fails (it can be hard to notice)
+  echo "sync failed, aborting"
+  exit 1
+}
 
 # Point to new version.
 cat dist-deploy/latest.js | sed "s|XXX|'$http'|" > dist-deploy/latest-send.js

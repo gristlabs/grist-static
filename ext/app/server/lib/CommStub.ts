@@ -22,10 +22,6 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
   public renameDoc = this._wrapMethod('renameDoc');
   public getConfig = this._wrapMethod('getConfig');
   public updateConfig = this._wrapMethod('updateConfig');
-  public lookupEmail = this._wrapMethod('lookupEmail');
-  public getNewInvites = this._wrapMethod('getNewInvites');
-  public getLocalInvites = this._wrapMethod('getLocalInvites');
-  public ignoreLocalInvite = this._wrapMethod('ignoreLocalInvite');
   public showItemInFolder = this._wrapMethod('showItemInFolder');
   public getBasketTables = this._wrapMethod('getBasketTables');
   public embedTable = this._wrapMethod('embedTable');
@@ -67,8 +63,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     this.trigger(msg.type, msg);
   }
   
-  public async openDoc(docName: string, mode?: string,
-                       linkParameters?: Record<string, string>): Promise<OpenLocalDocResult> {
+  public async openDoc(docName: string, options?: any): Promise<OpenLocalDocResult> {
     const dsm = new gristy.FakeDocStorageManager();
     const gs = {
       create: gristy.create,
@@ -92,6 +87,9 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       removeDocSession: () => 1,
       interruptConnection: () => 1,
       sendMessage: (...args: any[]) => {
+        this.handleMessage(args);
+      },
+      sendMessageOrInterrupt: (...args: any[]) => {
         this.handleMessage(args);
       },
       getLogMeta: () => {
@@ -133,7 +131,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
           };
         },
         getLinkParameters: () => {
-          return linkParameters || {};
+          return {};
         },
         getCachedAuth() {
           return {
@@ -164,6 +162,19 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       log: await this.ad.getRecentMinimalActions(this.session),
       userOverride: await this.ad.getUserOverride(this.session),
       recoveryMode: this.ad.recoveryMode,
+      isTimingOn: false,
+      user: {
+          Access: 'owners',
+          Email: 'anon@getgrist.com',
+          IsLoggedIn: false,
+          LinkKey: {},
+          Origin: null,
+          Name: 'Anonymous',
+          SessionID: 'u1',
+          ShareRef: null,
+          UserID: 1,
+          UserRef: 'none',
+      },
     };
     // throw new Error('not ipmlemented');
     //return this._makeRequest(null, docName, 'openDoc', docName, mode, linkParameters);
@@ -336,6 +347,18 @@ const widgetRepo = buildWidgetRepository(null as any);
 
 async function newFetch(target: string, opts: any) {
   console.log('newFetch', { target, opts });
+  const result = await fetchWithoutStatus(target, opts);
+  return {
+    ...result,
+    // Make sure "json" function returns a promise.
+    json: async () => result.json(),
+    // Add an "ok" summary.
+    ok: result?.status === 200,
+  };
+}
+
+
+async function fetchWithoutStatus(target: string, opts: any) {
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
   const session = (window as any).gristSession;
@@ -401,7 +424,6 @@ async function newFetch(target: string, opts: any) {
     status: 404,
     json: () => ({}),
   };
-  // return window.fetch(target, opts);
 }
 
 function installFetch() {
