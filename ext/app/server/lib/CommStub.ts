@@ -347,7 +347,7 @@ const widgetRepo = buildWidgetRepository(null as any);
 
 async function newFetch(target: string, opts: any) {
   console.log('newFetch', { target, opts });
-  const result = await fetchWithoutStatus(target, opts);
+  const result = await fetchWithoutOk(target, opts);
   return {
     ...result,
     // Make sure "json" function returns a promise.
@@ -358,7 +358,7 @@ async function newFetch(target: string, opts: any) {
 }
 
 
-async function fetchWithoutStatus(target: string, opts: any) {
+async function fetchWithoutOk(target: string, opts: any) {
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
   const session = (window as any).gristSession;
