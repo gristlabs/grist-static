@@ -25,6 +25,12 @@ rm -rf dist/static/sql.js/dist/
 rm -rf dist/node_modules/sql.js/dist/
 rm -f dist/sql.js/dist/sqljs-all.zip
 
+# Remove some unhelpful dead links, I think related to the API console,
+# which would need some effort to make work without a server.
+rm -f dist/sinon.js
+rm -f dist/swagger-ui.css
+rm -f dist/swagger-ui-bundle.js
+
 # Move entry points to top level of dist.
 for f in components.js csv-viewer.js; do
   cp dist/pipe/$f dist

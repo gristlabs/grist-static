@@ -10,6 +10,7 @@ import {DocStorage} from 'app/server/lib/DocStorage';
 import {DocWorker} from 'app/server/lib/DocWorker';
 import {GristServer} from 'app/server/lib/GristServer';
 import {HomeDBManager} from 'app/server/lib/HomeDBManagerStub';
+import {EmptySnapshotProgress} from 'app/server/lib/IDocStorageManager';
 import {NSandbox} from 'app/server/lib/NSandbox';
 import {SQLiteDB} from 'app/server/lib/SQLiteDB';
 import {virtualFileSystem} from 'app/server/lib/SqliteJs';
@@ -32,6 +33,9 @@ class FakeDocStorageManager {
   closeDocument() {}
   prepareLocalDoc() {}
   makeBackup() {}
+  getSnapshotProgress() {
+    return new EmptySnapshotProgress();
+  }
 
   /**
    * Copies are made when filtering a document
@@ -74,6 +78,9 @@ export class MiniExpressImpl implements MiniExpress {
   }
   public put(...args: any[]) {
     this._addEndpoint('put', args);
+  }
+
+  public use() {
   }
 
   // Method for invoking an endpoint.
