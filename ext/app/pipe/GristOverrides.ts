@@ -27,6 +27,13 @@ export interface GristOverrides {
 
   // A hook to the document's REST API.
   expressApp?: MiniExpress;
+
+  // Hooks for overriding behavior.
+  behaviorOverrides?: {
+    getCurrentUser?: () => unknown;
+    getCurrentOrg?: () => unknown;
+    onSave?: () => void;
+  };
 }
 
 export function getGristOverrides(): GristOverrides {

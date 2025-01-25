@@ -74,6 +74,7 @@ function bootstrapGrist(options) {
   const seedFile = options.initialFile;
   const homeUrl = new URL('.', bootstrapGristLocation).href;
   settings.staticGristOptions = options;
+  settings.behaviorOverrides = options.behaviorOverrides;
   if (seedFile) {
     settings.seedFile = new URL(seedFile, bootstrapGristLocation);
   }

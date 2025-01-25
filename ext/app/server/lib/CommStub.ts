@@ -243,29 +243,27 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
 Object.assign(Comm.prototype, BackboneEvents);
 
-
-const accessActive = {
-  "user": {
+// Can override by setting window.getCurrentUser.
+async function getCurrentUser() {
+  return gristOverrides.behaviorOverrides?.getCurrentUser?.() || {
     "id": 1,
     "email": "anon@getgrist.com",
     "name": "Anonymous",
     "picture": null,
     "ref": "3VEnpHipNXQZWQyCz5vLxH",
     "anonymous": true
-  },
-  "org": {
+  };
+}
+
+// Can override by setting window.getCurrentOrg.
+async function getCurrentOrg(user: unknown) {
+  return gristOverrides.behaviorOverrides?.getCurrentOrg?.() || {
     "id": 0,
     "createdAt": "2023-03-11T18:01:50.231Z",
     "updatedAt": "2023-03-11T18:01:50.231Z",
     "domain": "docs",
     "name": "Anonymous",
-    "owner": {
-      "id": 1,
-      "email": "anon@getgrist.com",
-      "name": "Anonymous",
-      "ref": "",
-      "anonymous": true
-    },
+    "owner": user,
     "access": "viewers",
     "billingAccount": {
       "id": 0,
@@ -291,8 +289,14 @@ const accessActive = {
       "inGoodStanding": true
     },
     "host": null
-  }
-};
+  };
+}
+
+async function getAccessActive() {
+  const user = await getCurrentUser();
+  const org = await getCurrentOrg(user);
+  return {user, org};
+}
 
 const accessAll = {
   "users": [
@@ -357,7 +361,6 @@ async function newFetch(target: string, opts: any) {
   };
 }
 
-
 async function fetchWithoutOk(target: string, opts: any) {
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
@@ -366,7 +369,7 @@ async function fetchWithoutOk(target: string, opts: any) {
   if (url.pathname.endsWith('/api/session/access/active')) {
     return {
       status: 200,
-      json: () => accessActive,
+      json: getAccessActive,
     };
   } else if (url.pathname.endsWith('/api/session/access/all')) {
     return {
@@ -418,6 +421,12 @@ async function fetchWithoutOk(target: string, opts: any) {
     return {
       status: 200,
       json: () => widgets,
+    };
+  } else if (url.pathname.endsWith('/api/orgs')) {
+    const orgs = [await getCurrentOrg(await getCurrentUser())];
+    return {
+      status: 200,
+      json: () => orgs,
     };
   }
   return {

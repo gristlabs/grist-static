@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <!--  See scripts/serve_cors.py  -->
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="static/pipe/bootstrap.js"></script>
+
+    <title>100% browser-based Grist</title>
+  </head>
+
+  <body>
+    <script>
+       function getBasenameWithoutExtension(path) {
+         const basename = path.split('/').pop();
+         const parts = basename.split('.');
+         return parts.length > 1 ? parts.slice(0, -1).join('.') : basename;
+       }
+
+       async function getCurrentUser() {
+         if (!puter.auth.isSignedIn) { return null; }
+         const user = await puter.auth.getUser();
+         return {
+           "id": 1,
+           "email": user.username,
+           "name": user.username,
+           "ref": user.uuid,
+           "picture": null,
+         };
+       }
+
+       function onSave(...args) {
+         console.warn("GOT SAVE", ...args);
+       }
+
+       const behaviorOverrides = {
+         getCurrentUser,
+         onSave,
+       };
+
+       // TODO a loader would be very nice, since bootstraping takes a while.
+       if (puter.ui.wasLaunchedWithItems()) {
+         puter.ui.onLaunchedWithItems(async (items) => {
+           const item = items[0];
+           const name = (item.name && item.name !== 'undefined') ? item.name : getBasenameWithoutExtension(item.path);
+           const initialContent = await (await item.read()).text();
+           bootstrapGrist({ initialContent, name, behaviorOverrides });
+         });
+       } else {
+         // Open a blank doc.
+         bootstrapGrist({ name: 'Untitled document', behaviorOverrides });
+       }
+    </script>
+  </body>
+</html>
