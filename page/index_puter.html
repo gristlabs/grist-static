@@ -11,45 +11,49 @@
 
   <body>
     <script>
-       function getBasenameWithoutExtension(path) {
-         const basename = path.split('/').pop();
-         const parts = basename.split('.');
-         return parts.length > 1 ? parts.slice(0, -1).join('.') : basename;
-       }
+      function getBasenameWithoutExtension(path) {
+        const basename = path.split('/').pop();
+        const parts = basename.split('.');
+        return parts.length > 1 ? parts.slice(0, -1).join('.') : basename;
+      }
 
-       async function getCurrentUser() {
-         if (!puter.auth.isSignedIn) { return null; }
-         const user = await puter.auth.getUser();
-         return {
-           "id": 1,
-           "email": user.username,
-           "name": user.username,
-           "ref": user.uuid,
-           "picture": null,
-         };
-       }
+      async function getCurrentUser() {
+        if (!puter.auth.isSignedIn) { return null; }
+        const user = await puter.auth.getUser();
+        return {
+          "id": 1,
+          "email": user.username,
+          "name": user.username,
+          "ref": user.uuid,
+          "picture": null,
+        };
+      }
 
-       function onSave(...args) {
-         console.warn("GOT SAVE", ...args);
-       }
+      async function onSave(...args) {
+        const homeUrl = gristConfig.homeUrl;
+        const docId = gristOverrides.fakeDocId;
+        const downloadUrl = new URL(`api/docs/${docId}/download`, homeUrl).href;
+        const downloadInfo = await fetchDownloadContent(downloadUrl);
+        const result = await puter.ui.showSaveFilePicker(downloadInfo.data, downloadInfo.name);
+      }
 
-       const behaviorOverrides = {
-         getCurrentUser,
-         onSave,
-       };
+      const behaviorOverrides = {
+        getCurrentUser,
+        onSave,
+      };
 
-       // TODO a loader would be very nice, since bootstraping takes a while.
-       if (puter.ui.wasLaunchedWithItems()) {
-         puter.ui.onLaunchedWithItems(async (items) => {
-           const item = items[0];
-           const name = (item.name && item.name !== 'undefined') ? item.name : getBasenameWithoutExtension(item.path);
-           const initialContent = await (await item.read()).text();
-           bootstrapGrist({ initialContent, name, behaviorOverrides });
-         });
-       } else {
-         // Open a blank doc.
-         bootstrapGrist({ name: 'Untitled document', behaviorOverrides });
-       }
+      // TODO a loader would be very nice, since bootstraping takes a while.
+      if (puter.ui.wasLaunchedWithItems()) {
+        puter.ui.onLaunchedWithItems(async (items) => {
+          const item = items[0];
+          const name = (item.name && item.name !== 'undefined') ? item.name : getBasenameWithoutExtension(item.path);
+          const initialContent = await (await item.read()).text();
+          bootstrapGrist({ initialContent, name, behaviorOverrides });
+        });
+      } else {
+        // Open a blank doc.
+        bootstrapGrist({ name: 'Untitled document', behaviorOverrides });
+      }
     </script>
   </body>
 </html>
