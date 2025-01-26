@@ -76,7 +76,7 @@ function bootstrapGrist(options) {
   settings.staticGristOptions = options;
   settings.behaviorOverrides = options.behaviorOverrides;
   if (seedFile) {
-    settings.seedFile = new URL(seedFile, bootstrapGristLocation);
+    settings.seedFile = (typeof seedFile === 'string') ? new URL(seedFile, bootstrapGristLocation) : seedFile;
   }
   if (options.initialContent) {
     settings.initialContent = options.initialContent;

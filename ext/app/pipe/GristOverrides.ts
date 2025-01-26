@@ -10,9 +10,9 @@ export interface GristOverrides {
     name?: string;
   };
   /**
-   * .grist doc URL.
+   * .grist doc URL or data.
    */
-  seedFile?: string;
+  seedFile?: string|URL|Uint8Array;
   /**
    * .csv file URL.
    */

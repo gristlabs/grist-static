@@ -11,10 +11,12 @@
 
   <body>
     <script>
-      function getBasenameWithoutExtension(path) {
-        const basename = path.split('/').pop();
-        const parts = basename.split('.');
-        return parts.length > 1 ? parts.slice(0, -1).join('.') : basename;
+      function basename(path) {
+        return path.split('/').pop();
+      }
+      function splitext(basename) {
+        const i = basename.lastIndexOf('.');
+        return i >= 0 ? [basename.slice(0, i), basename.slice(i)] : [basename, ''];
       }
 
       async function getCurrentUser() {
@@ -42,17 +44,33 @@
         onSave,
       };
 
+      async function openGristWithItem(item) {
+        try {
+          const initialConfig = {name: 'Untitled document', behaviorOverrides};
+          if (item) {
+            const [itemBasename, itemExt] = splitext(basename(item.path));
+            const name = (item.name && item.name !== 'undefined') ? item.name : itemBasename;
+            initialConfig.name = name;
+            if (['.csv', '.xlsx', '.tsv'].includes(itemExt.toLowerCase())) {
+              initialConfig.initialContent = await (await item.read()).text();
+            } else if (itemExt.toLowerCase() === '.grist') {
+              initialConfig.initialFile = await (await item.read()).bytes();
+            } else {
+              throw new Error("Unrecognized file type");
+            }
+          }
+          bootstrapGrist(initialConfig);
+        } catch (e) {
+          await puter.ui.alert(e.message);
+          puter.exit();
+        }
+      }
+
       // TODO a loader would be very nice, since bootstraping takes a while.
       if (puter.ui.wasLaunchedWithItems()) {
-        puter.ui.onLaunchedWithItems(async (items) => {
-          const item = items[0];
-          const name = (item.name && item.name !== 'undefined') ? item.name : getBasenameWithoutExtension(item.path);
-          const initialContent = await (await item.read()).text();
-          bootstrapGrist({ initialContent, name, behaviorOverrides });
-        });
+        puter.ui.onLaunchedWithItems(items => openGristWithItem(items[0]));
       } else {
-        // Open a blank doc.
-        bootstrapGrist({ name: 'Untitled document', behaviorOverrides });
+        openGristWithItem(null);
       }
     </script>
   </body>

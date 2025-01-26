@@ -68,7 +68,9 @@ export class JsDatabase implements MinDB {
               seed = mainDB.export();
             }
           }
-          if (seedFile) {
+          if (seedFile && seedFile instanceof Uint8Array) {
+            seed = seedFile;
+          } else if (seedFile) {
             // If we are in a iframe, we need to use the parent window to fetch the data.
             // This is hack to fix a bug in FF https://bugzilla.mozilla.org/show_bug.cgi?id=1741489, and shouldn't
             // affect other browsers.
