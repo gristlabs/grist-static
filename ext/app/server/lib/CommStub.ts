@@ -155,6 +155,8 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
       await this._loadInitialData(initialData);
     }
 
+    gristOverrides.behaviorOverrides?.onOpenComplete?.();
+
     return {
       docFD: 1,
       clientId: 'one-and-only',
@@ -386,7 +388,8 @@ async function fetchWithoutOk(target: string, opts: any) {
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
   const session = (window as any).gristSession;
-  const docId = gristOverrides.fakeDocId || 'unknown';
+  const docId = gristOverrides.behaviorOverrides?.getCurrentDocId?.() ||
+    gristOverrides.fakeDocId || 'unknown';
   if (url.pathname.endsWith('/api/session/access/active')) {
     return {
       status: 200,

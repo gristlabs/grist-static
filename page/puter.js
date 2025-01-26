@@ -25,21 +25,18 @@ async function getCurrentUser() {
 
 // If working with an existing file, we keep a reference to it, so that we can rename or update it.
 let _puterFSItem = null;
+let _isOpen = false;
 let _isSaved = false;
 function setCurrentPuterFSItem(item, isSaved) { _puterFSItem = item; _isSaved = isSaved; }
-function getCurrentDocName() { return getNameFromFSItem(_puterFSItem)?.name; }
-
-// Called when a document gets changed.
-function onChange() {
-  markAsSaved(false);
-}
 
 function markAsSaved(isSaved) {
   _isSaved = isSaved;
   const dpm = window.gristDocPageModel;
   // This is hack: isFork determines the logic for whether the document shows as
   // "unsaved", and isBareFork causes the save button to be named "Save Document".
-  dpm.currentDoc.set({...dpm.currentDoc.get(), isFork: !isSaved, isBareFork: !isSaved});
+  // id is set to a corresponding behavior (with or without "new~" prefix.)
+  const id = behaviorOverrides.getCurrentDocId();
+  dpm.currentDoc.set({...dpm.currentDoc.get(), id, isFork: !isSaved, isBareFork: !isSaved});
 }
 
 // Saves a new or existing document. Collects its contents and name, and uses puter's save-file
@@ -72,8 +69,12 @@ async function rename(newName) {
 // These are puter-specific behaviors that we hook into grist-static.
 const behaviorOverrides = {
   getCurrentUser,
-  getCurrentDocName,
-  onChange,
+  getCurrentDocName() { return getNameFromFSItem(_puterFSItem)?.name; },
+  // Hackily returning "new~" prefix determines DocPageModel's *initial* understanding if the doc
+  // is unsaved. See also markAsSaved() below.
+  getCurrentDocId() { return _isSaved ? "fakeDocId" : "new~fakeDocId"; },
+  onOpenComplete() { _isOpen = true; },
+  onChange() { if (_isOpen) { markAsSaved(false); } },
   save,
   rename,
 };
@@ -119,6 +120,7 @@ async function openGristWithItem(item) {
         const content = await readItemHack(item);
         const nameWithExt = name + ext.toLowerCase();
         config.initialData = new File([content], nameWithExt);
+        setCurrentPuterFSItem(null, true);
       } else {
         throw new Error("Unrecognized file type");
       }

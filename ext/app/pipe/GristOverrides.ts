@@ -35,6 +35,8 @@ export interface GristOverrides {
     getCurrentUser?: () => unknown;
     getCurrentOrg?: () => unknown;
     getCurrentDocName?: () => string|undefined;
+    getCurrentDocId?: () => string|undefined;
+    onOpenComplete?: () => void;
     onChange?: () => void;
     save?: () => void;
     rename?: (newName: string) => Promise<unknown>;
