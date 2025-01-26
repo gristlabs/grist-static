@@ -266,7 +266,6 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
 Object.assign(Comm.prototype, BackboneEvents);
 
-// Can override by setting window.getCurrentUser.
 async function getCurrentUser() {
   return gristOverrides.behaviorOverrides?.getCurrentUser?.() || {
     "id": 1,
@@ -278,7 +277,6 @@ async function getCurrentUser() {
   };
 }
 
-// Can override by setting window.getCurrentOrg.
 async function getCurrentOrg(user: unknown) {
   return gristOverrides.behaviorOverrides?.getCurrentOrg?.() || {
     "id": 0,
