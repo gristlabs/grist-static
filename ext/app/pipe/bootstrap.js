@@ -83,7 +83,7 @@ function bootstrapGrist(options) {
   } else if (options.initialData) {
     settings.initialData = options.initialData;
   }
-  const fakeDocId = "new~tTzg3iGWsXq7Q6hSXGb94j";
+  const fakeDocId = seedFile ? "tTzg3iGWsXq7Q6hSXGb94j" : "new~tTzg3iGWsXq7Q6hSXGb94j";
   const fakeUrl = `https://example.com/o/docs/doc/${fakeDocId}`;
   settings.fakeUrl = fakeUrl;
   settings.fakeDocId = fakeDocId;

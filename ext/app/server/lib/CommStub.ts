@@ -377,11 +377,22 @@ async function fetchWithoutOk(target: string, opts: any) {
       json: () => accessAll,
     };
   } else if (url.pathname.endsWith(`/api/docs/${docId}`)) {
-    docInfo.name = gristOverrides.staticGristOptions?.name || docInfo.name;
-    return {
-      status: 200,
-      json: () => docInfo,
-    };
+    if (opts.method === "PATCH") {
+      const body = JSON.parse(opts.body);
+      if (body.name) {
+        // This is a rename.
+        await gristOverrides.behaviorOverrides?.rename?.(body.name);
+      }
+      return { status: 200, json: () => null };
+    } else if (opts.method === "GET") {
+      docInfo.name = (gristOverrides.behaviorOverrides?.getCurrentDocName?.() ||
+        gristOverrides.staticGristOptions?.name || docInfo.name);
+      docInfo.id = docId;
+      return {
+        status: 200,
+        json: () => docInfo,
+      };
+    }
   } else if (url.pathname.endsWith('/api/orgs/0/workspaces')) {
     return {
       status: 200,

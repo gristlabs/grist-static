@@ -2,76 +2,11 @@
 <html>
   <head>
     <meta charset="utf8">
-    <!--  See scripts/serve_cors.py  -->
     <script src="https://js.puter.com/v2/"></script>
     <script src="static/pipe/bootstrap.js"></script>
-
-    <title>100% browser-based Grist</title>
+    <title>Grist</title>
   </head>
-
   <body>
-    <script>
-      function basename(path) {
-        return path.split('/').pop();
-      }
-      function splitext(basename) {
-        const i = basename.lastIndexOf('.');
-        return i >= 0 ? [basename.slice(0, i), basename.slice(i)] : [basename, ''];
-      }
-
-      async function getCurrentUser() {
-        if (!puter.auth.isSignedIn) { return null; }
-        const user = await puter.auth.getUser();
-        return {
-          "id": 1,
-          "email": user.username,
-          "name": user.username,
-          "ref": user.uuid,
-          "picture": null,
-        };
-      }
-
-      async function onSave(...args) {
-        const homeUrl = gristConfig.homeUrl;
-        const docId = gristOverrides.fakeDocId;
-        const downloadUrl = new URL(`api/docs/${docId}/download`, homeUrl).href;
-        const downloadInfo = await fetchDownloadContent(downloadUrl);
-        const result = await puter.ui.showSaveFilePicker(downloadInfo.data, downloadInfo.name);
-      }
-
-      const behaviorOverrides = {
-        getCurrentUser,
-        onSave,
-      };
-
-      async function openGristWithItem(item) {
-        try {
-          const initialConfig = {name: 'Untitled document', behaviorOverrides};
-          if (item) {
-            const [itemBasename, itemExt] = splitext(basename(item.path));
-            const name = (item.name && item.name !== 'undefined') ? item.name : itemBasename;
-            initialConfig.name = name;
-            if (['.csv', '.xlsx', '.tsv'].includes(itemExt.toLowerCase())) {
-              initialConfig.initialContent = await (await item.read()).text();
-            } else if (itemExt.toLowerCase() === '.grist') {
-              initialConfig.initialFile = await (await item.read()).bytes();
-            } else {
-              throw new Error("Unrecognized file type");
-            }
-          }
-          bootstrapGrist(initialConfig);
-        } catch (e) {
-          await puter.ui.alert(e.message);
-          puter.exit();
-        }
-      }
-
-      // TODO a loader would be very nice, since bootstraping takes a while.
-      if (puter.ui.wasLaunchedWithItems()) {
-        puter.ui.onLaunchedWithItems(items => openGristWithItem(items[0]));
-      } else {
-        openGristWithItem(null);
-      }
-    </script>
+    <script src="./puter.js"></script>
   </body>
 </html>

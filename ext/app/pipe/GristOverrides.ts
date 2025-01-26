@@ -32,7 +32,9 @@ export interface GristOverrides {
   behaviorOverrides?: {
     getCurrentUser?: () => unknown;
     getCurrentOrg?: () => unknown;
+    getCurrentDocName?: () => string|undefined;
     onSave?: () => void;
+    rename?: (newName: string) => Promise<unknown>;
   };
 }
 
