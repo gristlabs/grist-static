@@ -42,7 +42,8 @@ sandbox = sandbox_mod.default_sandbox = sandbox_mod.Sandbox(None, None)
 sandbox.run = lambda: print("Sandbox is running")
 
 def save_file(path, content):
-  with open(path, 'w') as f:
+  mode = 'w' if isinstance(content, str) else 'wb'
+  with open(path, mode) as f:
     f.write(content)
 
 sandbox.register('save_file', save_file)

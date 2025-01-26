@@ -14,11 +14,13 @@ export interface GristOverrides {
    */
   seedFile?: string|URL|Uint8Array;
   /**
-   * .csv file URL.
+   * URL of a file to fetch for importing, or a File object to import directly.
+   * The extension in the name (or in the URL path) determines how it's parsed.
    */
-  initialData?: string;
+  initialData?: string|File;
   /**
-   * .csv file content to load. Not used when initialData is set.
+   * .csv file content to load. Not used when initialData is set. Note that this is ONLY for csv
+   * data. For other filetypes (e.g. xlsx), set initialData to a File with a suitable name.
    */
   initialContent?: string;
   fakeUrl?: string;

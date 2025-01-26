@@ -78,19 +78,47 @@ const behaviorOverrides = {
   rename,
 };
 
+
+// XXX There is a bug on puter where some files are not readable. But they become readable if you
+// open them at least once via showOpenFilePicker(). So do that so that it's at least somewhat
+// possible to open.
+async function readItemHack(item) {
+  try {
+    return await item.read();
+  } catch (e) {
+    if (e.code !== 'subject_does_not_exist') {
+      throw e;
+    }
+    const answer = await puter.ui.alert(`Failed to open: ${e.message}`, [
+      {label: 'Open another way', value: 'open', type: 'primary'},
+      {label: 'Cancel', value: 'cancel'},
+    ]);
+    if (answer !== 'open') {
+      puter.exit();
+      return;
+    }
+  }
+  item = await puter.ui.showOpenFilePicker();
+  return await item.read();
+}
+
+const supportedExtensions = ['.csv', '.xlsx', '.tsv', '.dsv', '.txt', '.xlsm', '.json'];
+
 async function openGristWithItem(item) {
   try {
     const config = {name: 'Untitled document', behaviorOverrides};
     if (item) {
       const {name, ext} = getNameFromFSItem(item);
       config.name = name;
-      if (['.csv', '.xlsx', '.tsv'].includes(ext.toLowerCase())) {
-        // initialContent is used for imports.
-        config.initialContent = await (await item.read()).text();
-      } else if (ext.toLowerCase() === '.grist') {
+      if (ext.toLowerCase() === '.grist') {
         // initialFile is used for opening existing Grist docs.
-        config.initialFile = await (await item.read()).bytes();
+        config.initialFile = new Uint8Array(await (await item.read()).arrayBuffer());
         setCurrentPuterFSItem(item, true);
+      } else if (supportedExtensions.includes(ext.toLowerCase())) {
+        // initialData is used for imports.
+        const content = await readItemHack(item);
+        const nameWithExt = name + ext.toLowerCase();
+        config.initialData = new File([content], nameWithExt);
       } else {
         throw new Error("Unrecognized file type");
       }
