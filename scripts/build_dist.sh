@@ -12,7 +12,7 @@ mkdir dist-test
 # Copy over main material.
 ./scripts/link_page_resources.sh copy
 cp -r page/static dist
-for f in $(cd page; ls *.grist *.csv *.html); do
+for f in $(cd page; ls *.grist *.csv *.html *.js); do
   ln -s ../page/$f dist-test/$f
 done
 ./scripts/link_page_resources.sh link

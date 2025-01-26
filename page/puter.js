@@ -1,3 +1,10 @@
+/**
+ * puter.js
+ * ========
+ * This is an implementation of an integration of grist-static with puter.com.
+ * For Puter API documentation, see https://docs.puter.com/.
+ */
+
 // Seems to be an exposed polyfill of node's "path" module. Let's use it.
 const path = puter.path;
 
