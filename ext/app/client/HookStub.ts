@@ -6,7 +6,7 @@ import { setupNewHooks } from 'app/client/NewHooks';
 import { IAttrObj } from 'grainjs';
 
 export interface IHooksExtended extends IHooks {
-  onSave?: () => void;
+  save?: () => void;
 }
 
 export const hooks: IHooksExtended = {
@@ -24,7 +24,7 @@ export const hooks: IHooksExtended = {
   ignoreUnhandledError(err: Error|string, ev?: ErrorEvent): boolean {
     return Boolean(ev?.filename.startsWith('https://js.puter.com/'));
   },
-  onSave: gristOverrides.behaviorOverrides?.onSave,
+  save: gristOverrides.behaviorOverrides?.save,
 };
 
 function fetcher(...args: any[]) {

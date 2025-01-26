@@ -47,7 +47,7 @@ function overrideSave(callback: () => void) {
 }
 
 export function setupNewHooks(hooks: IHooksExtended) {
-  if (hooks.onSave) {
-    overrideSave(hooks.onSave);
+  if (hooks.save) {
+    overrideSave(hooks.save);
   }
 }

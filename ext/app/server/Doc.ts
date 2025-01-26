@@ -26,8 +26,8 @@ ActiveDocDeps.ACTIVEDOC_TIMEOUT_ACTION = 'ignore';
 
 class FakeDocStorageManager {
   getPath(x: string) { return x; }
-  renameDoc() { throw new Error('no renames'); }
-  markAsChanged() {}
+  renameDoc() { throw new Error('no renames'); }    // Not used.
+  markAsChanged() { gristOverrides.behaviorOverrides?.onChange?.(); }
   scheduleUsageUpdate() {}
   prepareToCreateDoc() {}
   closeDocument() {}

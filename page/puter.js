@@ -23,19 +23,40 @@ async function getCurrentUser() {
   };
 }
 
-// Saves an unsaved document: collects its contents and name, and uses puter's save-file dialog.
-async function onSave() {
+// If working with an existing file, we keep a reference to it, so that we can rename or update it.
+let _puterFSItem = null;
+let _isSaved = false;
+function setCurrentPuterFSItem(item, isSaved) { _puterFSItem = item; _isSaved = isSaved; }
+function getCurrentDocName() { return getNameFromFSItem(_puterFSItem)?.name; }
+
+// Called when a document gets changed.
+function onChange() {
+  markAsSaved(false);
+}
+
+function markAsSaved(isSaved) {
+  _isSaved = isSaved;
+  const dpm = window.gristDocPageModel;
+  // This is hack: isFork determines the logic for whether the document shows as
+  // "unsaved", and isBareFork causes the save button to be named "Save Document".
+  dpm.currentDoc.set({...dpm.currentDoc.get(), isFork: !isSaved, isBareFork: !isSaved});
+}
+
+// Saves a new or existing document. Collects its contents and name, and uses puter's save-file
+// dialog for an unsaved document, or writes over an existing one.
+async function save() {
   const homeUrl = gristConfig.homeUrl;
   const docId = gristOverrides.fakeDocId;
   const downloadUrl = new URL(`api/docs/${docId}/download`, homeUrl).href;
   const downloadInfo = await fetchDownloadContent(downloadUrl);
-  const result = await puter.ui.showSaveFilePicker(downloadInfo.data, downloadInfo.name);
+  if (_puterFSItem) {
+    const data = new Blob([downloadInfo.data]);
+    await puter.fs.write(_puterFSItem.path, data);
+    markAsSaved(true);
+  } else {
+    await puter.ui.showSaveFilePicker(downloadInfo.data, downloadInfo.name);
+  }
 }
-
-// If working with an existing file, we keep a reference to it, so that we can rename or update it.
-let _puterFSItem;
-function setCurrentPuterFSItem(item) { _puterFSItem = window._puterFSItem = item; }
-function getCurrentDocName() { console.warn("MOO"); return getNameFromFSItem(_puterFSItem)?.name; }
 
 // Implement renaming via puter.
 async function rename(newName) {
@@ -52,7 +73,8 @@ async function rename(newName) {
 const behaviorOverrides = {
   getCurrentUser,
   getCurrentDocName,
-  onSave,
+  onChange,
+  save,
   rename,
 };
 
@@ -68,14 +90,29 @@ async function openGristWithItem(item) {
       } else if (ext.toLowerCase() === '.grist') {
         // initialFile is used for opening existing Grist docs.
         config.initialFile = await (await item.read()).bytes();
+        setCurrentPuterFSItem(item, true);
       } else {
         throw new Error("Unrecognized file type");
       }
-      setCurrentPuterFSItem(item);
     }
+
+    // Watch for attempts to close an unsaved file.
+    puter.ui.onWindowClose(async function(){
+      if (!_isSaved) {
+        const answer = await puter.ui.alert(
+          'You have unsaved changes. Do you want to save them before you exit?', [
+            {label: 'Save', value: 'save', type: 'primary'},
+            {label: "Don't Save", value: 'exit'},
+            {label: 'Cancel', value: 'cancel'},
+          ]);
+        if (answer === 'cancel') { return; }
+        if (answer === 'save') { await save(); }
+      }
+      puter.exit();
+    })
     bootstrapGrist(config);
   } catch (e) {
-    await puter.ui.alert(e.message);
+    await puter.ui.alert(`Can't open file: ${e.message}`);
     puter.exit();
   }
 }
