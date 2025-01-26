@@ -24,10 +24,12 @@ async function getCurrentUser() {
 }
 
 // If working with an existing file, we keep a reference to it, so that we can rename or update it.
-let _puterFSItem = null;
+let _puterFSItem = null;      // Only set for a .grist file
+let _puterImportItem = null;  // Set for an imported file, e.g. a CSV.
 let _isOpen = false;
 let _isSaved = false;
 function setCurrentPuterFSItem(item, isSaved) { _puterFSItem = item; _isSaved = isSaved; }
+function setCurrentPuterImportItem(item, isSaved) { _puterImportItem = item; _isSaved = isSaved; }
 
 function markAsSaved(isSaved) {
   _isSaved = isSaved;
@@ -44,11 +46,36 @@ function markAsSaved(isSaved) {
 async function save() {
   const homeUrl = gristConfig.homeUrl;
   const docId = gristOverrides.fakeDocId;
-  const downloadUrl = new URL(`api/docs/${docId}/download`, homeUrl).href;
+  let downloadUrl = new URL(`api/docs/${docId}/download`, homeUrl).href;
+  let destinationItem = _puterFSItem;
+
+  if (!_puterFSItem && _puterImportItem &&
+    // We can do a decent job saving back CSVs (unlike say Excel files), so offer that option.
+    path.extname(_puterImportItem.path).toLowerCase() === '.csv'
+  ) {
+    const answer = await puter.ui.alert(
+      'Some features and data may be lost if saved in CSV format. ' +
+      'To preserve the full document, save it in Grist format.', [
+        {label: 'Save as CSV', value: 'csv', type: 'primary'},
+        {label: 'Save as Grist file', value: 'grist'},
+        {label: 'Cancel', value: 'cancel'},
+      ]);
+    if (answer === 'csv') {
+      // We need to pick what to export. We'll export the same thing that's in the Share Menu's
+      // "export as csv" option, i.e. the current widget.
+      downloadUrl = window.gristDocPageModel.gristDoc.get().getCsvLink();
+      destinationItem = _puterImportItem;
+    } else if (answer === 'grist') {
+      // Fall through to saving the document normally.
+    } else {
+      return 'cancel';
+    }
+  }
+
   const downloadInfo = await fetchDownloadContent(downloadUrl);
-  if (_puterFSItem) {
+  if (destinationItem) {
     const data = new Blob([downloadInfo.data]);
-    await puter.fs.write(_puterFSItem.path, data);
+    await puter.fs.write(destinationItem.path, data);
     markAsSaved(true);
   } else {
     await puter.ui.showSaveFilePicker(downloadInfo.data, downloadInfo.name);
@@ -120,7 +147,7 @@ async function openGristWithItem(item) {
         const content = await readItemHack(item);
         const nameWithExt = name + ext.toLowerCase();
         config.initialData = new File([content], nameWithExt);
-        setCurrentPuterFSItem(null, true);
+        setCurrentPuterImportItem(item, true);
       } else {
         throw new Error("Unrecognized file type");
       }
@@ -136,7 +163,7 @@ async function openGristWithItem(item) {
             {label: 'Cancel', value: 'cancel'},
           ]);
         if (answer === 'cancel') { return; }
-        if (answer === 'save') { await save(); }
+        if (answer === 'save' && (await save()) === 'cancel') { return; }
       }
       puter.exit();
     })
