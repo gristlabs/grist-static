@@ -1,6 +1,13 @@
 // Seems to be an exposed polyfill of node's "path" module. Let's use it.
 const path = puter.path;
 
+// Puter causes uncaught errors which Grist reports in a toast. Silence those.
+window.addEventListener('error', (ev) => {
+  if (ev.filename.startsWith('https://js.puter.com/')) {
+    ev.stopImmediatePropagation();
+  }
+});
+
 // If item is present, get its name and extension, e.g.
 // {path: "/foo/bar.txt"} -> {name: "bar", ext: ".txt"}. If item isn't set, returns undefined.
 function getNameFromFSItem(item) {
@@ -27,9 +34,9 @@ async function getCurrentUser() {
 let _puterFSItem = null;      // Only set for a .grist file
 let _puterImportItem = null;  // Set for an imported file, e.g. a CSV.
 let _isOpen = false;
-let _isSaved = false;
-function setCurrentPuterFSItem(item, isSaved) { _puterFSItem = item; _isSaved = isSaved; }
-function setCurrentPuterImportItem(item, isSaved) { _puterImportItem = item; _isSaved = isSaved; }
+let _isSaved = true;
+function setCurrentPuterFSItem(item) { _puterFSItem = item; }
+function setCurrentPuterImportItem(item) { _puterImportItem = item; }
 
 function markAsSaved(isSaved) {
   _isSaved = isSaved;
@@ -141,13 +148,13 @@ async function openGristWithItem(item) {
       if (ext.toLowerCase() === '.grist') {
         // initialFile is used for opening existing Grist docs.
         config.initialFile = new Uint8Array(await (await item.read()).arrayBuffer());
-        setCurrentPuterFSItem(item, true);
+        setCurrentPuterFSItem(item);
       } else if (supportedExtensions.includes(ext.toLowerCase())) {
         // initialData is used for imports.
         const content = await readItemHack(item);
         const nameWithExt = name + ext.toLowerCase();
         config.initialData = new File([content], nameWithExt);
-        setCurrentPuterImportItem(item, true);
+        setCurrentPuterImportItem(item);
       } else {
         throw new Error("Unrecognized file type");
       }

@@ -21,9 +21,6 @@ export const hooks: IHooksExtended = {
     preDecode,
   },
   maybeModifyLinkAttrs,
-  ignoreUnhandledError(err: Error|string, ev?: ErrorEvent): boolean {
-    return Boolean(ev?.filename.startsWith('https://js.puter.com/'));
-  },
   save: gristOverrides.behaviorOverrides?.save,
 };
 
