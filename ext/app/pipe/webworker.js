@@ -67,11 +67,15 @@ function start(pyodidePromise) {
   addEventListener('message', async (e) => {
     if (e.data.type === 'call') {
       const { name, args } = e.data;
-      let data = (await pyodidePromise).globals.get("call")(name, args);
-      if (data?.toJs) {
-        data = data.toJs({ dict_converter: Object.fromEntries });
+      try {
+        let data = (await pyodidePromise).globals.get("call")(name, args);
+        if (data?.toJs) {
+          data = data.toJs({ dict_converter: Object.fromEntries });
+        }
+        postMessage({ type: 'data', data });
+      } catch (e) {
+        postMessage({ type: 'error', error: e.message });
       }
-      postMessage({ type: 'data', data });
     }
   });
 }
