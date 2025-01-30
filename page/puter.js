@@ -92,7 +92,11 @@ async function save() {
     await puter.fs.write(destinationItem.path, data);
     markAsSaved(true);
   } else {
-    await puter.ui.showSaveFilePicker(downloadInfo.data, downloadInfo.name);
+    const result = await puter.ui.showSaveFilePicker(downloadInfo.data, downloadInfo.name);
+    if (result) {
+      _puterFSItem = result;
+      markAsSaved(true);
+    }
   }
 }
 
