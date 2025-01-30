@@ -5,6 +5,20 @@
     <script src="https://js.puter.com/v2/"></script>
     <script src="static/pipe/bootstrap.js"></script>
     <title>Grist</title>
+    <style>
+      /* Hide the disfunctional app bits. */
+      .test-bc-home,
+      .test-bc-workspace, .test-bc-workspace-ns, .test-bc-workspace-ns + .test-bc-separator,
+      .test-notifier-menu-btn,
+      .test-dm-account,
+      .test-dm-org > div:last-child
+      {
+        display: none !important;
+      }
+      ._cssAppHeader {
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
     <script src="./puter.js"></script>

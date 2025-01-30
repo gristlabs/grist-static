@@ -7,9 +7,9 @@ if [[ "$n" = "" ]]; then
   exit 0
 fi
 
-n=$(printf "%04d" $n)
-
 set -ex
+
+n=$(printf "%04d" $n)
 
 version="experiments/e$n"
 http="https://grist-static.com/$version/"
