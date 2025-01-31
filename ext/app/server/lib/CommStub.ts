@@ -75,11 +75,11 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     (window as any).gristActiveDoc = this.ad;
     //await this.ad.createEmptyDoc({});
     const hasSeed = gristOverrides.seedFile;
-    const initialDataUrl = gristOverrides.initialData;
+    const initialData = gristOverrides.initialData;
     const initialContent = gristOverrides.initialContent;
     await this.ad.loadDoc({mode: 'system'}, {
       forceNew: !hasSeed,
-      skipInitialTable: hasSeed || initialDataUrl || initialContent,
+      skipInitialTable: hasSeed || initialData || initialContent,
       useExisting: true,
     });
     this.client = {
@@ -151,9 +151,11 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     gristOverrides.expressApp = this.expressApp;
     if (initialContent) {
       await this._loadInitialContent(initialContent);
-    } else if (initialDataUrl) {
-      await this._loadInitialData(initialDataUrl);
+    } else if (initialData) {
+      await this._loadInitialData(initialData);
     }
+
+    gristOverrides.behaviorOverrides?.onOpenComplete?.();
 
     return {
       docFD: 1,
@@ -184,7 +186,7 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     return window.location.href;
   }
 
-  private async _loadInitialData(initialDataUrl: string) {
+  private async _readFromURL(initialDataUrl: string): Promise<File> {
     // If we are in a iframe, we need to use the parent window to fetch the data.
     // This is hack to fix a bug in FF https://bugzilla.mozilla.org/show_bug.cgi?id=1741489, and shouldn't
     // affect other browsers.
@@ -195,18 +197,39 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     if (!response.ok) {
       throw new Error(`Failed to load initial data from ${initialDataUrl}: ${response.statusText}`);
     }
-    const content = await response.text();
+    const content = await response.blob();
     // Extract filename from end of URL
     const originalFilename = initialDataUrl.match(/[^/]+$/)?.[0] || "data.csv";
-    await this._loadInitialContent(content, originalFilename);
+    return new File([content], originalFilename);
   }
 
-  private async _loadInitialContent(content: string, originalFilename: string = "data.csv") {
-    const path = "/tmp/data.csv";
+  private async _loadInitialData(initialData: string|File) {
+    if (typeof initialData === 'string') {
+      initialData = await this._readFromURL(initialData);
+    }
+    const content = new Uint8Array(await initialData.arrayBuffer());
+    await this._loadInitialContent(content, initialData.name);
+  }
+
+  private async _loadInitialContent(content: string|Uint8Array, originalFilename: string = "data.csv") {
+    // Corresponds to core/plugins/core/manifest.yml.
+    const fileParsers = {
+      csv_parser: ['csv', 'tsv', 'dsv', 'txt'],
+      xls_parser: ['xlsx', 'xlsm'],
+      json_parser: ['json'],
+    };
+    // Turn into a map of 'csv' -> 'csv_parser', etc.
+    const parserMap = new Map(Object.entries(fileParsers).flatMap(([parser, lst]) => lst.map(ext => [ext, parser])));
+
+    const basename = originalFilename.split('/').pop()!;
+    const extension = basename.split('.').pop()!;
+    const parserName = parserMap.get(extension);
+    if (!parserName) { throw new Error("File format is not supported"); }
+    const path = `/tmp/${basename}`;
     const parseOptions = {};
     await this.ad._pyCall("save_file", path, content);
     const parsedFile = await this.ad._pyCall(
-      "csv_parser.parseFile",
+      `${parserName}.parseFile`,
       {path, origName: originalFilename},
       parseOptions,
     );
@@ -243,29 +266,25 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
 Object.assign(Comm.prototype, BackboneEvents);
 
-
-const accessActive = {
-  "user": {
+async function getCurrentUser() {
+  return gristOverrides.behaviorOverrides?.getCurrentUser?.() || {
     "id": 1,
     "email": "anon@getgrist.com",
     "name": "Anonymous",
     "picture": null,
     "ref": "3VEnpHipNXQZWQyCz5vLxH",
     "anonymous": true
-  },
-  "org": {
+  };
+}
+
+async function getCurrentOrg(user: unknown) {
+  return gristOverrides.behaviorOverrides?.getCurrentOrg?.() || {
     "id": 0,
     "createdAt": "2023-03-11T18:01:50.231Z",
     "updatedAt": "2023-03-11T18:01:50.231Z",
     "domain": "docs",
     "name": "Anonymous",
-    "owner": {
-      "id": 1,
-      "email": "anon@getgrist.com",
-      "name": "Anonymous",
-      "ref": "",
-      "anonymous": true
-    },
+    "owner": user,
     "access": "viewers",
     "billingAccount": {
       "id": 0,
@@ -291,8 +310,14 @@ const accessActive = {
       "inGoodStanding": true
     },
     "host": null
-  }
-};
+  };
+}
+
+async function getAccessActive() {
+  const user = await getCurrentUser();
+  const org = await getCurrentOrg(user);
+  return {user, org};
+}
 
 const accessAll = {
   "users": [
@@ -357,16 +382,16 @@ async function newFetch(target: string, opts: any) {
   };
 }
 
-
 async function fetchWithoutOk(target: string, opts: any) {
   const url = new URL(target);
   const activeDoc = (window as any).gristActiveDoc;
   const session = (window as any).gristSession;
-  const docId = gristOverrides.fakeDocId || 'unknown';
+  const docId = gristOverrides.behaviorOverrides?.getCurrentDocId?.() ||
+    gristOverrides.fakeDocId || 'unknown';
   if (url.pathname.endsWith('/api/session/access/active')) {
     return {
       status: 200,
-      json: () => accessActive,
+      json: getAccessActive,
     };
   } else if (url.pathname.endsWith('/api/session/access/all')) {
     return {
@@ -374,11 +399,22 @@ async function fetchWithoutOk(target: string, opts: any) {
       json: () => accessAll,
     };
   } else if (url.pathname.endsWith(`/api/docs/${docId}`)) {
-    docInfo.name = gristOverrides.staticGristOptions?.name || docInfo.name;
-    return {
-      status: 200,
-      json: () => docInfo,
-    };
+    if (opts.method === "PATCH") {
+      const body = JSON.parse(opts.body);
+      if (body.name) {
+        // This is a rename.
+        await gristOverrides.behaviorOverrides?.rename?.(body.name);
+      }
+      return { status: 200, json: () => null };
+    } else if (opts.method === "GET") {
+      docInfo.name = (gristOverrides.behaviorOverrides?.getCurrentDocName?.() ||
+        gristOverrides.staticGristOptions?.name || docInfo.name);
+      docInfo.id = docId;
+      return {
+        status: 200,
+        json: () => docInfo,
+      };
+    }
   } else if (url.pathname.endsWith('/api/orgs/0/workspaces')) {
     return {
       status: 200,
@@ -418,6 +454,12 @@ async function fetchWithoutOk(target: string, opts: any) {
     return {
       status: 200,
       json: () => widgets,
+    };
+  } else if (url.pathname.endsWith('/api/orgs')) {
+    const orgs = [await getCurrentOrg(await getCurrentUser())];
+    return {
+      status: 200,
+      json: () => orgs,
     };
   }
   return {

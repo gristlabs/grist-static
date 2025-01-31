@@ -24,11 +24,14 @@ class WorkerWrapper {
         name,
         args,
       });
-      return await new Promise((resolve) => {
+      return await new Promise((resolve, reject) => {
         const listener = ((e: MessageEvent) => {
           if (e.data.type === 'data') {
             this.worker.removeEventListener('message', listener);
             resolve(e.data.data);
+          } else if (e.data.type === 'error') {
+            this.worker.removeEventListener('message', listener);
+            reject(e.data.error);
           } else {
             console.error('Unexpected message ignored', e.data);
           }

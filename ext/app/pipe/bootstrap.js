@@ -74,15 +74,16 @@ function bootstrapGrist(options) {
   const seedFile = options.initialFile;
   const homeUrl = new URL('.', bootstrapGristLocation).href;
   settings.staticGristOptions = options;
+  settings.behaviorOverrides = options.behaviorOverrides;
   if (seedFile) {
-    settings.seedFile = new URL(seedFile, bootstrapGristLocation);
+    settings.seedFile = (typeof seedFile === 'string') ? new URL(seedFile, bootstrapGristLocation) : seedFile;
   }
   if (options.initialContent) {
     settings.initialContent = options.initialContent;
   } else if (options.initialData) {
     settings.initialData = options.initialData;
   }
-  const fakeDocId = "new~tTzg3iGWsXq7Q6hSXGb94j";
+  const fakeDocId = settings.behaviorOverrides?.getCurrentDocId?.() || "new~tTzg3iGWsXq7Q6hSXGb94j";
   const fakeUrl = `https://example.com/o/docs/doc/${fakeDocId}`;
   settings.fakeUrl = fakeUrl;
   settings.fakeDocId = fakeDocId;

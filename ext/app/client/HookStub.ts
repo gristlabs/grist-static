@@ -2,9 +2,14 @@ import { defaultHooks, IHooks } from 'app/client/DefaultHooks';
 import { IGristUrlState } from 'app/common/gristUrls';
 import { getGristConfig } from 'app/common/urlUtils';
 import { gristOverrides } from 'app/pipe/GristOverrides';
+import { setupNewHooks } from 'app/client/NewHooks';
 import { IAttrObj } from 'grainjs';
 
-export const hooks: IHooks = {
+export interface IHooksExtended extends IHooks {
+  save?: () => void;
+}
+
+export const hooks: IHooksExtended = {
   ...defaultHooks,
   iframeAttributes: {
     credentialless: true,
@@ -16,6 +21,7 @@ export const hooks: IHooks = {
     preDecode,
   },
   maybeModifyLinkAttrs,
+  save: gristOverrides.behaviorOverrides?.save,
 };
 
 function fetcher(...args: any[]) {
@@ -173,6 +179,7 @@ function gristDownloadLink(element: any) {
   return false;
 }
 
+(window as any).fetchDownloadContent = fetchFromDocApi;
 (window as any).gristDownloadLink = gristDownloadLink;
 
 /**
@@ -188,3 +195,5 @@ function maybeModifyLinkAttrs(originalAttrs: IAttrObj) {
   delete newAttrs.download;
   return newAttrs;
 }
+
+setupNewHooks(hooks);
