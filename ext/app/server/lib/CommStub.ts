@@ -373,7 +373,7 @@ async function newUpload(xhr: XMLHttpRequest, formData: FormData, origSend: type
   }
 
   const uploadedFiles: MyFileUploadInfo[] = [];
-  for (const file of uploads as Blob[]) {
+  for (const file of uploads as File[]) {
     console.log(`Received file ${file.name} (${file.size} bytes)`);
     uploadedFiles.push({
       absPath: 'fakeAbsPath',
