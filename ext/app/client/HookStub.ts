@@ -7,6 +7,15 @@ import { IAttrObj } from 'grainjs';
 
 export interface IHooksExtended extends IHooks {
   save?: () => void;
+
+  // If set, this is called in place of XMLHttpRequest's send() method when the body argument is
+  // FormData. Note that this will also affect fetch() requests with such body. The original send
+  // method is passed in as the last argument.
+  // Hook should emit events on the xhr object appropriately. Upload code uses:
+  //    xhr.addEventListener('load', ...)
+  //    xhr.addEventListener('error', ...)
+  //    xhr.upload.addEventListener('progress', ...)
+  upload?: (xhr: XMLHttpRequest, formData: FormData, send: typeof XMLHttpRequest.prototype.send) => void;
 }
 
 export const hooks: IHooksExtended = {
@@ -22,6 +31,7 @@ export const hooks: IHooksExtended = {
   },
   maybeModifyLinkAttrs,
   save: gristOverrides.behaviorOverrides?.save,
+  upload: (...args) => (window as any).uploadHook?.(...args),
 };
 
 function fetcher(...args: any[]) {

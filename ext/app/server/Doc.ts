@@ -22,6 +22,9 @@ process.env.GRIST_SANDBOX_FLAVOR = 'pyodideInline';
 process.env.GRIST_WIDGET_LIST_URL =
   'https://gristlabs.github.io/grist-widget/manifest.json';
 
+// This affects, in particular, makeAccessId() function used for uploads.
+process.env.GRIST_SINGLE_USER = '1';
+
 ActiveDocDeps.ACTIVEDOC_TIMEOUT_ACTION = 'ignore';
 
 class FakeDocStorageManager {
