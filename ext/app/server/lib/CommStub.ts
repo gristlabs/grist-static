@@ -6,8 +6,14 @@ import { gristOverrides, MiniExpress } from 'app/pipe/GristOverrides';
 import gristy from 'app/server/Doc';
 
 import { Events as BackboneEvents } from 'backbone';
+import { ImportOptions, ImportResult, TransformRuleMap } from 'app/common/ActiveDocAPI';
+import { ActiveDocImport, FileImportOptions } from 'app/server/lib/ActiveDocImport';
+import { OptDocSession } from 'app/server/lib/DocSession';
 import { createDummyTelemetry } from 'app/server/lib/GristServer';
 import { buildWidgetRepository } from 'app/server/lib/WidgetRepository';
+import { FileUploadResult, UploadResult } from 'app/common/uploads';
+import { FileUploadInfo, globalUploadSet, UploadInfo } from 'app/server/lib/uploads';
+import * as path from 'path';
 
 export class Comm  extends dispose.Disposable implements GristServerAPI, DocListAPI {
   // methods defined by GristServerAPI
@@ -56,13 +62,13 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
   public releaseDocConnection() {
   }
-  
+
   public handleMessage(msg: any) {
     msg = msg[0];
     msg.docFD = 1;
     this.trigger(msg.type, msg);
   }
-  
+
   public async openDoc(docName: string, options?: any): Promise<OpenLocalDocResult> {
     const dsm = new gristy.FakeDocStorageManager();
     const gs = {
@@ -211,39 +217,15 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     await this._loadInitialContent(content, initialData.name);
   }
 
-  private async _loadInitialContent(content: string|Uint8Array, originalFilename: string = "data.csv") {
-    // Corresponds to core/plugins/core/manifest.yml.
-    const fileParsers = {
-      csv_parser: ['csv', 'tsv', 'dsv', 'txt'],
-      xls_parser: ['xlsx', 'xlsm'],
-      json_parser: ['json'],
-    };
-    // Turn into a map of 'csv' -> 'csv_parser', etc.
-    const parserMap = new Map(Object.entries(fileParsers).flatMap(([parser, lst]) => lst.map(ext => [ext, parser])));
-
-    const basename = originalFilename.split('/').pop()!;
-    const extension = basename.split('.').pop()!;
-    const parserName = parserMap.get(extension);
-    if (!parserName) { throw new Error("File format is not supported"); }
-    const path = `/tmp/${basename}`;
-    const parseOptions = {};
-    await this.ad._pyCall("save_file", path, content);
-    const parsedFile = await this.ad._pyCall(
-      `${parserName}.parseFile`,
-      {path, origName: originalFilename},
-      parseOptions,
-    );
-    const importOptions = {
-      parseOptions,
-      mergeOptionsMap: {},
-      isHidden: false,
-      originalFilename,
-      uploadFileIndex: 0,
-      transformRuleMap: {},
-    };
-    await this.ad.importParsedFileAsNewTable(
-      this.session, parsedFile, importOptions
-    )
+  private async _loadInitialContent(content: string|Uint8Array, origName: string = "data.csv") {
+    const files: MyFileUploadInfo[] = [{
+      absPath: 'fakeAbsPath',
+      origName,
+      size: content.length,
+      ext: path.extname(origName).toLowerCase(),
+      content,
+    }];
+    return this.ad.oneStepImport(this.session, {files});
   }
 
   private _wrapMethod<Name extends keyof GristServerAPI>(name: Name): GristServerAPI[Name] {
@@ -370,6 +352,120 @@ const docInfo = {
 
 const widgetRepo = buildWidgetRepository(null as any);
 
+interface MyFileUploadInfo extends FileUploadInfo {
+  content: string|Uint8Array;
+}
+
+// This largely replicates the logic of handleOptionalUpload() in app/server/lib/uploads.ts.
+async function newUpload(xhr: XMLHttpRequest, formData: FormData, origSend: typeof XMLHttpRequest.prototype.send) {
+  // Hook should emit events on the xhr object appropriately. Upload code uses:
+  //    xhr.addEventListener('load', ...)
+  //    xhr.addEventListener('error', ...)
+  //    xhr.upload.addEventListener('progress', ...)
+  console.log('Received upload', formData);
+
+  // 'upload' is the name of the form field containing file data, set by app/client/lib/uploads.
+  // If no such field, then we got called for some other endpoint. Fall back to default behavior
+  // without special handling.
+  const uploads = formData.getAll('upload');
+  if (uploads.length === 0) {
+    return origSend.call(xhr, formData);
+  }
+
+  const uploadedFiles: MyFileUploadInfo[] = [];
+  for (const file of uploads as File[]) {
+    console.log(`Received file ${file.name} (${file.size} bytes)`);
+    uploadedFiles.push({
+      absPath: 'fakeAbsPath',
+      origName: file.name,
+      size: file.size,
+      ext: path.extname(file.name).toLowerCase(),
+      content: new Uint8Array(await file.arrayBuffer()),    // <-- Extra property containing the actual file data
+    });
+  }
+  const tmpDir = 'fakeTmpDir';
+  const cleanupCallback = () => {}; // no-op
+  const accessId = null;
+  const uploadId = globalUploadSet.registerUpload(uploadedFiles, tmpDir, cleanupCallback, accessId);
+  const files: FileUploadResult[] = uploadedFiles;
+  console.log(`Created uploadId ${uploadId} in tmp dir ${tmpDir}`);
+  const uploadResult: UploadResult = {uploadId, files};
+  // These properties are normally read-only getters, but NewHooks makes them settable.
+  (xhr as any).status = 200;
+  (xhr as any).responseText = JSON.stringify(uploadResult);
+  xhr.dispatchEvent(new ProgressEvent('load'));
+}
+
+// Replace a method implementation that we need to handle serverless "uploads".
+(ActiveDocImport.prototype as any)._importFiles = async function(
+  docSession: OptDocSession, upload: UploadInfo, transforms: TransformRuleMap[],
+  {parseOptions = {}, mergeOptionMaps = []}: ImportOptions,
+  isHidden: boolean
+): Promise<ImportResult> {
+
+  const importResult: ImportResult = {options: parseOptions, tables: []};
+  for (const [index, file] of upload.files.entries()) {
+    const fileParseOptions = {...parseOptions};
+    if (file.ext === '.dsv') {
+      if (!fileParseOptions.delimiter) {
+        fileParseOptions.delimiter = '💩';
+      }
+      if (!fileParseOptions.encoding) {
+        fileParseOptions.encoding = 'utf-8';
+      }
+    }
+    const originalFilename = file.origName;
+    const res = await this._importFileAsNewTable(docSession, (file as MyFileUploadInfo).content, {
+      parseOptions: fileParseOptions,
+      mergeOptionsMap: mergeOptionMaps[index] || {},
+      isHidden,
+      originalFilename,
+      uploadFileIndex: index,
+      transformRuleMap: transforms[index] || {}
+    });
+    if (index === 0) {
+      // Returned parse options from the first file should be used for all files in one upload.
+      importResult.options = parseOptions = res.options;
+    }
+    importResult.tables.push(...res.tables);
+  }
+  return importResult;
+};
+
+(ActiveDocImport.prototype as any)._importFileAsNewTable = async function(
+  this: ActiveDocImport,
+  docSession: OptDocSession, content: string|Uint8Array,
+  importOptions: FileImportOptions
+): Promise<ImportResult> {
+  const ad = (this as any)._activeDoc;
+  const {originalFilename, parseOptions} = importOptions;
+  console.log("ActiveDoc._importFileAsNewTable(%s)", originalFilename);
+
+  // Corresponds to core/plugins/core/manifest.yml.
+  const fileParsers = {
+    csv_parser: ['csv', 'tsv', 'dsv', 'txt'],
+    xls_parser: ['xlsx', 'xlsm'],
+    json_parser: ['json'],
+  };
+  // Turn into a map of 'csv' -> 'csv_parser', etc.
+  const parserMap = new Map(Object.entries(fileParsers).flatMap(([parser, lst]) => lst.map(ext => [ext, parser])));
+
+  const basename = originalFilename.split('/').pop()!;
+  const extension = basename.split('.').pop()!;
+  const parserName = parserMap.get(extension);
+  if (!parserName) { throw new Error("File format is not supported"); }
+  const path = `/tmp/${basename}`;
+
+  await ad._pyCall("save_file", path, content);
+  const parsedFile = await ad._pyCall(
+    `${parserName}.parseFile`,
+    {path, origName: originalFilename},
+    parseOptions,
+  );
+  return this.importParsedFileAsNewTable(docSession, parsedFile, importOptions);
+};
+
+
 async function newFetch(target: string, opts: any) {
   console.log('newFetch', { target, opts });
   const result = await fetchWithoutOk(target, opts);
@@ -471,6 +567,9 @@ async function fetchWithoutOk(target: string, opts: any) {
 function installFetch() {
   if (!(window as any).fetchHook) {
     (window as any).fetchHook = newFetch;
+  }
+  if (!(window as any).uploadHook) {
+    (window as any).uploadHook = newUpload;
   }
 }
 

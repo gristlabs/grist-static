@@ -50,4 +50,27 @@ export function setupNewHooks(hooks: IHooksExtended) {
   if (hooks.save) {
     overrideSave(hooks.save);
   }
+  if (hooks.upload) {
+    const upload = hooks.upload;
+
+    // A version of XMLHttpRequest that allows setting some normally read-only fields:
+    // status and requestText; and overrides send() method to use simulated uploads.
+    class MyXMLHttpRequest extends XMLHttpRequest {
+      private _myStatus: number|undefined;
+      private _myRequestText: string|undefined;
+      get status() { return this._myStatus ?? super.status; }
+      set status(s) { this._myStatus = s; }
+      get responseText() { return this._myRequestText ?? super.responseText; }
+      set responseText(s) { this._myRequestText = s; }
+
+      public send(body?: any): void {
+        return ((body && body instanceof FormData) ?
+          upload(this, body, super.send) :
+          super.send(body));
+      }
+    }
+
+    // Override XMLHttpRequest, so that we can simulate a successful response.
+    window.XMLHttpRequest = MyXMLHttpRequest;
+  }
 }
