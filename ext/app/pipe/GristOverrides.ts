@@ -3,6 +3,7 @@
  * Here we at least try to shepherd the state into a single place.
  */
 
+import type { FileDialogOptions } from 'app/client/ui/FileDialog';
 
 export interface GristOverrides {
   bootstrapGristPrefix?: string;
@@ -39,6 +40,7 @@ export interface GristOverrides {
     onOpenComplete?: () => void;
     onChange?: () => void;
     save?: () => void;
+    open?: (options: FileDialogOptions) => Promise<FileList>;
     rename?: (newName: string) => Promise<unknown>;
   };
 }
