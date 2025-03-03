@@ -3,10 +3,14 @@ import { IGristUrlState } from 'app/common/gristUrls';
 import { getGristConfig } from 'app/common/urlUtils';
 import { gristOverrides } from 'app/pipe/GristOverrides';
 import { setupNewHooks } from 'app/client/NewHooks';
+import type { FileDialogOptions } from 'app/client/ui/FileDialog';
 import { IAttrObj } from 'grainjs';
 
 export interface IHooksExtended extends IHooks {
   save?: () => void;
+
+  // If set, used to implement FileDialog's open(), used in for importing files.
+  open?: (options: FileDialogOptions) => Promise<FileList>;
 
   // If set, this is called in place of XMLHttpRequest's send() method when the body argument is
   // FormData. Note that this will also affect fetch() requests with such body. The original send
@@ -31,6 +35,7 @@ export const hooks: IHooksExtended = {
   },
   maybeModifyLinkAttrs,
   save: gristOverrides.behaviorOverrides?.save,
+  open: gristOverrides.behaviorOverrides?.open,
   upload: (...args) => (window as any).uploadHook?.(...args),
 };
 

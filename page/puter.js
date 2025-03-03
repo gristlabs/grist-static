@@ -100,6 +100,19 @@ async function save() {
   }
 }
 
+async function open(options) {
+  const accept = options.accept ? options.accept.split(",") : supportedExtensions;
+  options = {...options, accept};
+  const itemOrItems = await puter.ui.showOpenFilePicker(options);
+  const items = itemOrItems.length ? itemOrItems : [itemOrItems];
+  // Trick to construct a FileList (from https://stackoverflow.com/a/56447852/328565)
+  const list = new DataTransfer();
+  for (const item of items) {
+    list.items.add(new File([await item.read()], item.name));
+  }
+  return list.files;
+}
+
 // Implement renaming via puter.
 async function rename(newName) {
   // Note: _puterFSItem.rename() method exists too but fails (and isn't well-documented).
@@ -121,6 +134,7 @@ const behaviorOverrides = {
   onOpenComplete() { _isOpen = true; },
   onChange() { if (_isOpen) { markAsSaved(false); } },
   save,
+  open,
   rename,
 };
 

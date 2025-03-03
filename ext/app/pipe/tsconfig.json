@@ -3,4 +3,9 @@
   "include": [
     "./GristOverrides.ts",
   ],
+  "references": [
+    { "path": "../../../app/client" },
+    { "path": "../../../app/common" },
+    { "path": "../../../app/plugin" },
+  ]
 }

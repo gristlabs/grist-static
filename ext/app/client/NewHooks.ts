@@ -3,6 +3,7 @@
 
 import {dom} from 'grainjs';
 import type {IHooksExtended} from 'app/client/HookStub';
+import type {FileDialogOptions} from 'app/client/ui/FileDialog';
 
 /**
  * Observes changes to parentElem until it acquires a child matching the given CSS selector. At
@@ -46,9 +47,24 @@ function overrideSave(callback: () => void) {
   });
 }
 
+function overrideOpen(open: (options: FileDialogOptions) => Promise<FileList>) {
+  dom.onMatchElem(document.body, '#file_dialog_input', 'click', async (ev: Event, elem: EventTarget) => {
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+    // Trick open() function into seeing the file list returned from the 'open' callback.
+    const fileInput = elem as HTMLInputElement;
+    const options: FileDialogOptions = {multiple: fileInput.multiple, accept: fileInput.accept};
+    fileInput.files = await open(options);
+    elem.dispatchEvent(new Event('change'));
+  }, {useCapture: true});
+}
+
 export function setupNewHooks(hooks: IHooksExtended) {
   if (hooks.save) {
     overrideSave(hooks.save);
+  }
+  if (hooks.open) {
+    overrideOpen(hooks.open);
   }
   if (hooks.upload) {
     const upload = hooks.upload;
