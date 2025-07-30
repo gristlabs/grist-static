@@ -159,6 +159,8 @@ Sorry this is awkward.
 
 ## Building from source
 
+You need your local python3 to have `setuptools` installed, see `requirements-dev.txt`
+
 ```
 git submodule update --init
 make requirements
