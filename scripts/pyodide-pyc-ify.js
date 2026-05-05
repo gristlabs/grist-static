@@ -1,18 +1,11 @@
 /**
- * pyodide has a pyc version we'd like to use, currently at:
- *   https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/
- * Unlike the rest of pyodide, the version isn't available in
- * github releases or other packaged forms that I can find,
- * so we play some tricks to fetch it.
- *
- * (We could do simply:
- *   loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/pyc/'})
- * but then grist-static wouldn't be usable at all without a network, and
- * we'd need to document the extra dependency).
+ * pyodide has a pyc version we'd like to use at jsdelivr's
+ * /pyodide/v<version>/pyc/. The version is read from the installed
+ * pyodide's package.json (see ext/package.json). It isn't packaged
+ * as a separate npm release, so we fetch and overlay manually.
  */
 
 const fs = require('fs');
-const fetch = require('node-fetch');
 const path = require('path');
 
 // Regular pyodide release is stored here.
@@ -39,17 +32,15 @@ async function scanFiles() {
 
   const indexURL = `https://cdn.jsdelivr.net/pyodide/v${version}/pyc/`;
   const files = fs.readdirSync(base);
-  for (const f of files) {
+  await Promise.all(files.map(async f => {
     const src = indexURL + f;
-    console.log(`checking for version of ${f} at ${src}`);
     const fileResponse = await fetch(src);
-    if (fileResponse.ok) {
-      const fileBuffer = await fileResponse.buffer();
-      const outputFile = path.join(base, f);
-      fs.writeFileSync(outputFile, fileBuffer);
-      console.log(`Wrote to ${outputFile}`);
-    }
-  }
+    if (!fileResponse.ok) { return; }
+    const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
+    const outputFile = path.join(base, f);
+    fs.writeFileSync(outputFile, fileBuffer);
+    console.log(`overlaid ${f}`);
+  }));
   fs.writeFileSync(checkFile, '');
 }
 

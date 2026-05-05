@@ -19,7 +19,7 @@ function transfer {
 }
 
 cd core/static
-rm -rf bootstrap bootstrap-datepicker jquery jqueryui hljs.default.css
+rm -rf bootstrap-datepicker jquery jqueryui hljs.default.css
 rm -rf static node_modules pipe
 cd ../..
 
@@ -28,7 +28,6 @@ cd page
 rm -rf static
 transfer ./ ../core/static static
 cd static
-transfer ../../core/static/ ../node_modules/bootstrap bootstrap
 transfer ../../core/static/ ../node_modules/bootstrap-datepicker bootstrap-datepicker
 transfer ../../core/static/ ../node_modules/jquery jquery
 transfer ../../core/static/ ../node_modules/components-jqueryui jqueryui

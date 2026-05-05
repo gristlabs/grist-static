@@ -8,11 +8,15 @@
     "../../../core/app/gen-server/**/*",
     "../../../stubs/app/server/declarations.d.ts",
     "../../../stubs/app/server/server.ts",
-    "../../../stubs/app/server/logins.ts",
     "../../../stubs/app/server/prometheus-exporter.ts",
-    "../../../stubs/app/server/lib/TelemetryManager.ts",
+    "../../../stubs/app/server/lib/loginSystems.ts",
+    "../../../stubs/app/server/lib/globalConfig.ts",
+    "../../../stubs/app/server/lib/create.ts",
     "../pipe/webworker.js",
-    "../pipe/package_filenames.json"
+    "../pipe/package_filenames.json",
+    // CommStub and friends reach for window.gristConfig at runtime;
+    // GristWindow declares the Window augmentation upstream maintains.
+    "../../../app/client/lib/GristWindow.ts"
   ],
   "references": [
     { "path": "../../../app/common" },

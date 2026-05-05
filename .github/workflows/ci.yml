@@ -1,0 +1,39 @@
+name: ci
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: |
+            ext/yarn.lock
+            core/yarn.lock
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: make requirements
+
+      # Use the runner's bundled Chrome+chromedriver (mirrors
+      # grist-widget's CI). Avoids core/buildtools/install_chrome_for_tests.sh,
+      # which pins Chrome to 146 for core's visual-assertion tests
+      # and produces a chromedriver patch mismatch for us.
+      - run: cd core && ./node_modules/selenium-webdriver/bin/linux/selenium-manager --driver chromedriver
+
+      - run: make build
+
+      # Without this the test server returns 404 for pipe/bootstrap.js.
+      - run: ./scripts/link_page_resources.sh
+
+      - run: yarn test:all

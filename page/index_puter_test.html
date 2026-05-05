@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>Grist (Puter test)</title>
+    <script>
+      // Minimal window.puter mock. Every save records into
+      // window.__puterTest.calls. If puter.js grows new dependencies on
+      // the SDK, add them here too.
+      (function () {
+        window.__puterTest = {calls: []};
+
+        // ?reopen=1 + sessionStorage bytes -> surface as a launched item
+        // so puter.js boots with config.initialFile (round-trip test).
+        let pendingItems = null;
+        if (location.search.includes('reopen=1')) {
+          const stashed = sessionStorage.getItem('puterTestReopenBytes');
+          if (stashed) {
+            sessionStorage.removeItem('puterTestReopenBytes');
+            const arr = new Uint8Array(JSON.parse(stashed));
+            pendingItems = [{
+              path: '/Reopened.grist', name: 'Reopened.grist',
+              read: async () => new Blob([arr]),
+            }];
+          }
+        }
+
+        const path = {
+          parse(p) {
+            const slash = p.lastIndexOf('/');
+            const base = slash >= 0 ? p.substring(slash + 1) : p;
+            const dot = base.lastIndexOf('.');
+            return {
+              name: dot > 0 ? base.substring(0, dot) : base,
+              ext: dot > 0 ? base.substring(dot) : '',
+            };
+          },
+          extname(p) { return path.parse(p).ext; },
+        };
+
+        async function toBytes(data) {
+          if (data instanceof Uint8Array) { return Array.from(data); }
+          if (data instanceof ArrayBuffer) { return Array.from(new Uint8Array(data)); }
+          return Array.from(new Uint8Array(await new Response(data).arrayBuffer()));
+        }
+
+        async function record(method, name, data) {
+          window.__puterTest.calls.push({method, name, bytes: await toBytes(data)});
+        }
+
+        window.puter = {
+          path,
+          auth: {
+            isSignedIn: false,
+            getUser: async () => ({username: 'tester', uuid: 'test-uuid'}),
+          },
+          fs: {
+            write: async (filepath, data) => { await record('fs.write', filepath, data); },
+            rename: async (oldPath, newName) => ({path: '/' + newName, name: newName}),
+          },
+          ui: {
+            // Pick the primary option for any prompt — labelled Save.
+            alert: async (msg, buttons) => buttons[0].value,
+            showSaveFilePicker: async (data, name) => {
+              await record('showSaveFilePicker', name, data);
+              return {path: '/' + name, name};
+            },
+            showOpenFilePicker: async () => ({
+              path: '/dummy', name: 'dummy', read: async () => new Blob([])
+            }),
+            onWindowClose: () => {},
+            wasLaunchedWithItems: () => Boolean(pendingItems),
+            onLaunchedWithItems: (cb) => { if (pendingItems) { cb(pendingItems); } },
+          },
+          exit: () => {},
+        };
+      })();
+    </script>
+    <script src="static/pipe/bootstrap.js"></script>
+  </head>
+  <body>
+    <script src="./puter.js"></script>
+  </body>
+</html>

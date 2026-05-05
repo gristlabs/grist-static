@@ -4,7 +4,10 @@
   "description": "A purely front-end flavor of Grist",
   "main": "dist/index.js",
   "scripts": {
-    "build": "make requirements && make build && make package"
+    "build": "make requirements && make build && make package",
+    "test": "./scripts/test_nbrowser.sh '^Formulas |^MultiColumn3 |^Search2 '",
+    "test:all": "./scripts/test_nbrowser.sh '^(Formulas|RowMenu|FilteringBugs|LeftPanel|DetailView|ColumnTransform|CopyWithHeaders|CopyPasteLinked|SelectByRightPanel|Features|MultiColumn3|ToggleColumns|Search2) '",
+    "test:puter": "./scripts/test_nbrowser.sh '^StaticPuter '"
   },
   "repository": "https://github.com/gristlabs/grist-static",
   "author": "Paul Fitzpatrick <paul@getgrist.com>",

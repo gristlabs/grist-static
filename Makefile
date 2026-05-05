@@ -7,16 +7,17 @@ default:
 	@echo "  # now visit http://localhost:3030/page/"
 
 requirements:
-	cd ext && yarn install --frozen-lockfile --modules-folder=../node_modules --verbose
-	cd core && yarn install --frozen-lockfile --verbose
+	cd ext && yarn install --frozen-lockfile --modules-folder=../node_modules
+	cd core && yarn install --frozen-lockfile
 	cd core && test -e ext && echo ext present || ln -s ../ext ext
 	cd core && yarn run install:python
 	cd core/sandbox/pyodide && make setup
 	cd core/sandbox && ./bundle_as_wheel.sh && cp dist/*.whl pyodide/_build/packages/
+	cp core/sandbox/pyodide/package_filenames.json ext/app/pipe/package_filenames.json
 	node scripts/pyodide-pyc-ify.js
 
 update-lock:
-	cd ext && yarn install --modules-folder=../node_modules --verbose
+	cd ext && yarn install --modules-folder=../node_modules
 	cd core && yarn install
 
 build:

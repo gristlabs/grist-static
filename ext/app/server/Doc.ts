@@ -2,6 +2,7 @@
 
 import {gristOverrides, MiniExpress, ResponseInfo} from 'app/pipe/GristOverrides';
 import {ActiveDoc, Deps as ActiveDocDeps} from 'app/server/lib/ActiveDoc';
+import {makeExceptionalDocSession, makeOptDocSession} from 'app/server/lib/DocSession';
 import {Comm} from 'app/server/lib/Comm';
 import {create} from 'app/server/lib/create';
 import {addDocApiRoutes} from 'app/server/lib/DocApi';
@@ -88,7 +89,7 @@ export class MiniExpressImpl implements MiniExpress {
 
   // Method for invoking an endpoint.
 
-  public async run(options: {method: string, path: string}): Promise<ResponseInfo> {
+  public async run(options: {method: string, path: string, body?: any}): Promise<ResponseInfo> {
     // Look up the endpoint.
     const endpointAndParams = this._getEndpoint(options);
     if (!endpointAndParams) {
@@ -132,6 +133,7 @@ export class MiniExpressImpl implements MiniExpress {
       },
       query,
       params: endpointAndParams.params,
+      body: options.body,
     };
 
     // Create a place to cache information set in a response.
@@ -156,6 +158,18 @@ export class MiniExpressImpl implements MiniExpress {
         info.data = data;
         return this;
       },
+      json(data: any) {
+        // Express's res.json(...): set Content-Type and stash the value.
+        // We hand the value back as-is (it's already a JS object) so callers
+        // via expressApp.run() don't have to JSON.parse the response.
+        info.type = 'application/json';
+        info.data = data;
+        return this;
+      },
+      status(_code: number) {
+        // Stash for completeness; no consumer reads it yet.
+        return this;
+      },
       type(name: string) {
         info.type = name;
         return this;
@@ -163,6 +177,10 @@ export class MiniExpressImpl implements MiniExpress {
       download(fileName: string, name: string, fn: (err: any) => Promise<void>) {
         info.name = name;
         info.data = virtualFileSystem.get(fileName);
+        // Drop the Map's reference once the caller has it. info.data still
+        // holds the bytes until the consumer is done; this just avoids a
+        // doc-sized leak between saves.
+        virtualFileSystem.delete(fileName);
       }
     };
     const next = (err?: any) => {
@@ -251,9 +269,10 @@ function makeApp(dm: DocManager, gs: GristServer, comm: Comm): MiniExpress {
 
   addDocApiRoutes(app as any,
                   dw,
-                  {} as any,
+                  {} as any,        // docWorkerMap
                   dm,
                   db as any,
+                  {} as any,        // attachmentStoreProvider (added in upgraded API)
                   gs);
   return app;
 }
@@ -272,6 +291,8 @@ const backend = {
   NSandbox,
   create,
   makeApp,
+  makeExceptionalDocSession,
+  makeOptDocSession,
 };
 
 export default backend;

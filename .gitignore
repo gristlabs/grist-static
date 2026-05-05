@@ -1,4 +1,7 @@
 node_modules
 stash
 dist
+dist-test
+_build
 page/static
+scripts/*.bak

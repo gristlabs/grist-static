@@ -1,7 +1,9 @@
 import { gristOverrides } from 'app/pipe/GristOverrides';
-import { makeSimpleCreator, ICreate } from 'app/server/lib/ICreate';
+import { BaseCreate, ICreate } from 'app/server/lib/ICreate';
 import { SqliteJsVariant } from 'app/server/lib/SqliteJs';
 import { ISandboxCreationOptions, ISandbox } from 'app/server/lib/ISandbox';
+import { SqliteVariant } from 'app/server/lib/SqliteCommon';
+import { traceWrap } from 'app/server/lib/testmode/trace';
 import { Mutex } from 'async-mutex';
 
 class WorkerWrapper {
@@ -44,13 +46,9 @@ class WorkerWrapper {
   }
 }
 
-// Returns a blob:// URL which points
-// to a javascript file which will call
-// importScripts with the URL of the actual worker code.
-// Based on https://stackoverflow.com/a/62914052/2482744
-// Used to avoid CORS errors when loading worker.
-// Also allows directly injecting urlPrefix instead of
-// posting it in a message.
+// Returns a blob: URL pointing at a tiny JS that importScripts the
+// real worker. Avoids CORS errors and lets us inject urlPrefix
+// directly. https://stackoverflow.com/a/62914052/2482744
 function getWorkerURL(urlPrefix: string) {
   const content = `
 self.urlPrefix = "${urlPrefix}pipe/";
@@ -74,10 +72,11 @@ class PyodideSandbox implements ISandbox {
   }
 
   async pyCall(funcName: string, ...varArgs: unknown[]) {
-    return await this.workerWrapper.call(funcName, ...varArgs);
+    return traceWrap('py', funcName, () => this.workerWrapper.call(funcName, ...varArgs));
   }
 
-  async reportMemoryUsage() {
+  async reportMemoryUsage(): Promise<number> {
+    return 0;
   }
 
   getFlavor() { return 'pyodide'; }
@@ -85,15 +84,16 @@ class PyodideSandbox implements ISandbox {
   isProcessDown() { return false; }
 }
 
-export const create: ICreate = {
-  ...makeSimpleCreator({
-    getSqliteVariant() {
-      // return new BetterSqliteVariant();
-      return new SqliteJsVariant();
-    },
-    deploymentType: 'static',
-  }),
-  NSandbox: (_options: ISandboxCreationOptions) => {
+class StaticCreate extends BaseCreate {
+  constructor() {
+    super('static', []);
+  }
+  public getSqliteVariant(): SqliteVariant {
+    return new SqliteJsVariant();
+  }
+  public override NSandbox(_options: ISandboxCreationOptions): ISandbox {
     return new PyodideSandbox();
-  },
-};
+  }
+}
+
+export const create: ICreate = new StaticCreate();

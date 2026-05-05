@@ -9,7 +9,13 @@ import { Events as BackboneEvents } from 'backbone';
 import { ImportOptions, ImportResult, TransformRuleMap } from 'app/common/ActiveDocAPI';
 import { ActiveDocImport, FileImportOptions } from 'app/server/lib/ActiveDocImport';
 import { OptDocSession } from 'app/server/lib/DocSession';
-import { createDummyTelemetry } from 'app/server/lib/GristServer';
+import { installSnapshotOnPagehide } from 'app/server/lib/testmode/snapshot';
+import {
+  ANON_ACCESS_ALL, ANON_DOC_INFO_DEFAULT_NAME, ANON_USER_FOR_RESULT,
+  getCurrentOrg, getCurrentUser,
+  makeAnonDocInfo, makeStubClient, makeStubGristServer, makeStubSession,
+} from 'app/server/lib/gristStubs';
+import { trace } from 'app/server/lib/testmode/trace';
 import { buildWidgetRepository } from 'app/server/lib/WidgetRepository';
 import { FileUploadResult, UploadResult } from 'app/common/uploads';
 import { FileUploadInfo, globalUploadSet, UploadInfo } from 'app/server/lib/uploads';
@@ -54,6 +60,14 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
   public initialize() {
   }
 
+  // Bumped around _makeRequest and around broadcast dispatch, so
+  // gu.waitForServer sees both as in-flight.
+  private _inFlight: number = 0;
+
+  public hasActiveRequests(): boolean {
+    return this._inFlight > 0;
+  }
+
   public addUserActions() {
   }
 
@@ -66,95 +80,54 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
   public handleMessage(msg: any) {
     msg = msg[0];
     msg.docFD = 1;
+    trace('broadcast', msg.type);
     this.trigger(msg.type, msg);
   }
 
-  public async openDoc(docName: string, options?: any): Promise<OpenLocalDocResult> {
+  // Bump, fire synchronous listeners, drain a microtask, drop — so
+  // .then() continuations queued by listeners still see in-flight.
+  private _dispatchBroadcast(args: any[]): void {
+    this._inFlight++;
+    try {
+      this.handleMessage(args);
+    } finally {
+      Promise.resolve().then(() => { this._inFlight--; });
+    }
+  }
+
+  public async openDoc(docName: string): Promise<OpenLocalDocResult> {
+    trace('open', 'enter', docName);
     const dsm = new gristy.FakeDocStorageManager();
-    const gs = {
-      create: gristy.create,
-      getTelemetry() { return createDummyTelemetry(); },
-    };
-    this.dm = new gristy.DocManager(dsm as any, null, null, gs as any);
+    trace('open', 'after FakeDocStorageManager');
+    const gs = makeStubGristServer();
+    this.dm = new gristy.DocManager(dsm as any, null, null, {} as any, gs as any);
+    trace('open', 'after DocManager');
     this.ad = new gristy.ActiveDoc(this.dm, docName);
+    trace('open', 'after ActiveDoc');
     this.dm.addActiveDoc(docName, this.ad);
-    (window as any).gristActiveDoc = this.ad;
-    //await this.ad.createEmptyDoc({});
+    activeDocSingleton = this.ad;
+
     const hasSeed = gristOverrides.seedFile;
     const initialData = gristOverrides.initialData;
     const initialContent = gristOverrides.initialContent;
-    await this.ad.loadDoc({mode: 'system'}, {
+    trace('open', 'before loadDoc', {hasSeed: !!hasSeed});
+    await this.ad.loadDoc(gristy.makeExceptionalDocSession('system'), {
       forceNew: !hasSeed,
       skipInitialTable: hasSeed || initialData || initialContent,
       useExisting: true,
     });
-    this.client = {
-      clientId: 'one-and-only',
-      removeDocSession: () => 1,
-      interruptConnection: () => 1,
-      sendMessage: (...args: any[]) => {
-        this.handleMessage(args);
-      },
-      sendMessageOrInterrupt: (...args: any[]) => {
-        this.handleMessage(args);
-      },
-      getLogMeta: () => {
-        return { thing: 1 };
-      },
-      getAltSessionId: () => {
-        return 'alt-session-id';
-      },
-      getCachedUserId: () => {
-        return 1;
-      },
-      getCachedUserRef: () => {
-        return '3VEnpHipNXQZWQyCz5vLxH';
-      },
-      getProfile: () => {
-        return {
-          "id": 1,
-          "email": "anon@getgrist.com",
-          "name": "Anonymous",
-          "picture": null,
-          "ref": "3VEnpHipNXQZWQyCz5vLxH",
-          "anonymous": true
-        };
-      },
-    };
-    this.session = {
-      client: this.client,
-      authorizer: {
-        assertAccess: () => true,
-        getUserId: () => 1,
-        getUser: () => {
-          return {
-            "id": 1,
-            "email": "anon@getgrist.com",
-            "name": "Anonymous",
-            "picture": null,
-            "ref": "3VEnpHipNXQZWQyCz5vLxH",
-            "anonymous": true
-          };
-        },
-        getLinkParameters: () => {
-          return {};
-        },
-        getCachedAuth() {
-          return {
-            access: 'owners',
-            docId: docName,
-            removed: false,
-          };
-        },
-      }
-    };
-    (window as any).gristSession = this.session;
-    this.ad.addClient({
-      addDocSession: () => this.session
-    }, {});
-    (window as any).ad = this.ad;
+    trace('open', 'after loadDoc');
+
+    this.client = makeStubClient((args) => this._dispatchBroadcast(args));
+    this.session = makeStubSession(this.client, docName);
+    sessionSingleton = this.session;
+    this.ad.addClient({addDocSession: () => this.session}, {});
+    trace('open', 'after addClient');
     this.expressApp = gristy.makeApp(this.dm, gs as any, this as any);
+    trace('open', 'after makeApp');
     gristOverrides.expressApp = this.expressApp;
+    installTestBridge(docName, this.expressApp);
+
     if (initialContent) {
       await this._loadInitialContent(initialContent);
     } else if (initialData) {
@@ -163,32 +136,32 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
 
     gristOverrides.behaviorOverrides?.onOpenComplete?.();
 
+    const [doc, rawLog, userOverride] = await Promise.all([
+      this.ad.fetchMetaTables(this.session),
+      this.ad.getRecentMinimalActions(this.session),
+      this.ad.getUserOverride(this.session),
+    ]);
+    // Test-mode refresh: snapshot the DB on pagehide, and re-tag the
+    // history as fromSelf so the next page load can undo into it.
+    let log = rawLog;
+    if (gristOverrides.testRefreshPersistence) {
+      installSnapshotOnPagehide();
+      log = (rawLog || []).map((ag: object) => ({...ag, fromSelf: true}));
+    }
+    trace('open', 'return');
     return {
       docFD: 1,
       clientId: 'one-and-only',
-      doc: await this.ad.fetchMetaTables(this.session),
-      log: await this.ad.getRecentMinimalActions(this.session),
-      userOverride: await this.ad.getUserOverride(this.session),
+      doc,
+      log,
+      userOverride,
       recoveryMode: this.ad.recoveryMode,
       isTimingOn: false,
-      user: {
-          Access: 'owners',
-          Email: 'anon@getgrist.com',
-          IsLoggedIn: false,
-          LinkKey: {},
-          Origin: null,
-          Name: 'Anonymous',
-          SessionID: 'u1',
-          ShareRef: null,
-          UserID: 1,
-          UserRef: 'none',
-      },
+      user: ANON_USER_FOR_RESULT as any,
     };
-    // throw new Error('not ipmlemented');
-    //return this._makeRequest(null, docName, 'openDoc', docName, mode, linkParameters);
   }
 
-  public getDocWorkerUrl(docId: string|null): string {
+  public getDocWorkerUrl(docId: string | null): string {
     return window.location.href;
   }
 
@@ -233,65 +206,51 @@ export class Comm  extends dispose.Disposable implements GristServerAPI, DocList
     return this._makeRequest.bind(this, null, null, name);
   }
 
-  public async _makeRequest(clientId: string|null, docId: string|null,
+  public async _makeRequest(clientId: string | null, docId: string | null,
                             methodName: string, ...args: any[]): Promise<any> {
     args[0] = this.session; // { mode: 'system', client: this.client };
+    this._inFlight++;
+    const t0 = Math.round(performance.now());
+    trace('comm', methodName + ':start');
+    let ok = false;
     try {
       const result = await this.ad[methodName].call(this.ad, ...args);
+      // __staticApplyDelayMs lets tests insert a fixed post-apply delay.
+      const extraMs = window.__staticApplyDelayMs || 0;
+      if (extraMs > 0) {
+        await new Promise(r => setTimeout(r, extraMs));
+      }
+      ok = true;
       return result;
     } catch (e) {
-      console.error("GOT FAILURE", {methodName, args, e});
+      const err = e as Error;
+      trace('comm', methodName + ':err', String(err?.message || err).substring(0, 200));
+      console.error('CommStub method failed:', methodName, e);
       throw e;
+    } finally {
+      this._inFlight--;
+      trace('comm', methodName + ':end', {dur: Math.round(performance.now()) - t0, ok});
     }
   }
+
 }
 
 Object.assign(Comm.prototype, BackboneEvents);
 
-async function getCurrentUser() {
-  return gristOverrides.behaviorOverrides?.getCurrentUser?.() || {
-    "id": 1,
-    "email": "anon@getgrist.com",
-    "name": "Anonymous",
-    "picture": null,
-    "ref": "3VEnpHipNXQZWQyCz5vLxH",
-    "anonymous": true
-  };
-}
-
-async function getCurrentOrg(user: unknown) {
-  return gristOverrides.behaviorOverrides?.getCurrentOrg?.() || {
-    "id": 0,
-    "createdAt": "2023-03-11T18:01:50.231Z",
-    "updatedAt": "2023-03-11T18:01:50.231Z",
-    "domain": "docs",
-    "name": "Anonymous",
-    "owner": user,
-    "access": "viewers",
-    "billingAccount": {
-      "id": 0,
-      "individual": true,
-      "product": {
-        "name": "anonymous",
-        "features": {
-          "workspaces": true,
-          "maxSharesPerWorkspace": 0,
-          "maxSharesPerDoc": 2,
-          "snapshotWindow": {
-            "count": 30,
-            "unit": "days"
-          },
-          "baseMaxRowsPerDocument": 5000,
-          "baseMaxApiUnitsPerDocumentPerDay": 5000,
-          "baseMaxDataSizePerDocument": 10240000,
-          "baseMaxAttachmentsBytesPerDocument": 1073741824,
-          "gracePeriodDays": 14
-        }
-      },
-      "isManager": false,
-      "inGoodStanding": true
+// Cross-process bridge for tests. homeUtil.ts routes api.applyUserActions
+// through this rather than the production gristOverrides.expressApp,
+// so the two surfaces don't drift into each other.
+function installTestBridge(docName: string, expressApp: MiniExpress): void {
+  if (typeof window === 'undefined') { return; }
+  window.__staticTestBridge = {
+    applyUserActions: async (actions) => {
+      const r = await expressApp.run({
+        method: 'post',
+        path: `/api/docs/${docName}/apply`,
+        body: actions,
+      });
+      return r && r.data;
     },
-    "host": null
   };
 }
 
@@ -300,55 +259,6 @@ async function getAccessActive() {
   const org = await getCurrentOrg(user);
   return {user, org};
 }
-
-const accessAll = {
-  "users": [
-    {
-      "id": 1,
-      "email": "anon@getgrist.com",
-      "name": "Anonymous",
-      "picture": null,
-      "anonymous": true
-    }
-  ],
-  "orgs": []
-};
-
-
-const docInfo = {
-  "name": "Your document",
-  "createdAt": "2023-03-11T23:07:40.999Z",
-  "updatedAt": "2023-03-11T23:07:40.999Z",
-  "id": "new~tTzg3iGWsXq7Q6hSXGb94j",
-  "isPinned": false,
-  "urlId": null,
-  "workspace": {
-    "name": "Home",
-    "createdAt": "2023-02-25T21:02:43.000Z",
-    "updatedAt": "2023-02-25T21:02:43.242Z",
-    "id": 1,
-    "isSupportWorkspace": false,
-    "docs": [],
-    "org": {
-      "name": "Personal",
-      "createdAt": "2023-02-25T21:02:43.000Z",
-      "updatedAt": "2023-02-25T21:02:43.235Z",
-      "id": 1,
-      "domain": "docs-4",
-      "host": null,
-      "owner": {
-        "id": 4,
-        "name": "Support",
-        "picture": null,
-        "ref": "dYWDbNhQWZ1WaXqpiqFfcN"
-      }
-    },
-    "access": "owners"
-  },
-  "aliases": [],
-  "access": "owners",
-  "trunkAccess": "owners"
-};
 
 const widgetRepo = buildWidgetRepository(null as any);
 
@@ -362,7 +272,6 @@ async function newUpload(xhr: XMLHttpRequest, formData: FormData, origSend: type
   //    xhr.addEventListener('load', ...)
   //    xhr.addEventListener('error', ...)
   //    xhr.upload.addEventListener('progress', ...)
-  console.log('Received upload', formData);
 
   // 'upload' is the name of the form field containing file data, set by app/client/lib/uploads.
   // If no such field, then we got called for some other endpoint. Fall back to default behavior
@@ -374,7 +283,6 @@ async function newUpload(xhr: XMLHttpRequest, formData: FormData, origSend: type
 
   const uploadedFiles: MyFileUploadInfo[] = [];
   for (const file of uploads as File[]) {
-    console.log(`Received file ${file.name} (${file.size} bytes)`);
     uploadedFiles.push({
       absPath: 'fakeAbsPath',
       origName: file.name,
@@ -388,7 +296,6 @@ async function newUpload(xhr: XMLHttpRequest, formData: FormData, origSend: type
   const accessId = null;
   const uploadId = globalUploadSet.registerUpload(uploadedFiles, tmpDir, cleanupCallback, accessId);
   const files: FileUploadResult[] = uploadedFiles;
-  console.log(`Created uploadId ${uploadId} in tmp dir ${tmpDir}`);
   const uploadResult: UploadResult = {uploadId, files};
   // These properties are normally read-only getters, but NewHooks makes them settable.
   (xhr as any).status = 200;
@@ -439,7 +346,6 @@ async function newUpload(xhr: XMLHttpRequest, formData: FormData, origSend: type
 ): Promise<ImportResult> {
   const ad = (this as any)._activeDoc;
   const {originalFilename, parseOptions} = importOptions;
-  console.log("ActiveDoc._importFileAsNewTable(%s)", originalFilename);
 
   // Corresponds to core/plugins/core/manifest.yml.
   const fileParsers = {
@@ -467,7 +373,6 @@ async function newUpload(xhr: XMLHttpRequest, formData: FormData, origSend: type
 
 
 async function newFetch(target: string, opts: any) {
-  console.log('newFetch', { target, opts });
   const result = await fetchWithoutOk(target, opts);
   return {
     ...result,
@@ -478,10 +383,14 @@ async function newFetch(target: string, opts: any) {
   };
 }
 
+// Set by Comm.openDoc; read by the fake-home-server fetch handler below.
+let activeDocSingleton: any;
+let sessionSingleton: any;
+
 async function fetchWithoutOk(target: string, opts: any) {
   const url = new URL(target);
-  const activeDoc = (window as any).gristActiveDoc;
-  const session = (window as any).gristSession;
+  const activeDoc = activeDocSingleton;
+  const session = sessionSingleton;
   const docId = gristOverrides.behaviorOverrides?.getCurrentDocId?.() ||
     gristOverrides.fakeDocId || 'unknown';
   if (url.pathname.endsWith('/api/session/access/active')) {
@@ -492,7 +401,7 @@ async function fetchWithoutOk(target: string, opts: any) {
   } else if (url.pathname.endsWith('/api/session/access/all')) {
     return {
       status: 200,
-      json: () => accessAll,
+      json: () => ANON_ACCESS_ALL,
     };
   } else if (url.pathname.endsWith(`/api/docs/${docId}`)) {
     if (opts.method === "PATCH") {
@@ -503,23 +412,18 @@ async function fetchWithoutOk(target: string, opts: any) {
       }
       return { status: 200, json: () => null };
     } else if (opts.method === "GET") {
-      docInfo.name = (gristOverrides.behaviorOverrides?.getCurrentDocName?.() ||
-        gristOverrides.staticGristOptions?.name || docInfo.name);
-      docInfo.id = docId;
+      const name = gristOverrides.behaviorOverrides?.getCurrentDocName?.() ||
+        gristOverrides.staticGristOptions?.name ||
+        ANON_DOC_INFO_DEFAULT_NAME;
       return {
         status: 200,
-        json: () => docInfo,
+        json: () => makeAnonDocInfo({name, id: docId}),
       };
     }
   } else if (url.pathname.endsWith('/api/orgs/0/workspaces')) {
     return {
       status: 200,
       json: () => [],
-    };
-  } else if (url.pathname.endsWith(`/api/docs/${docId}/snapshots`)) {
-    return {
-      status: 200,
-      json: () => ({ snapshots: [] }),
     };
   } else if (url.pathname.endsWith(`/api/docs/${docId}/snapshots`)) {
     return {
@@ -565,11 +469,11 @@ async function fetchWithoutOk(target: string, opts: any) {
 }
 
 function installFetch() {
-  if (!(window as any).fetchHook) {
-    (window as any).fetchHook = newFetch;
+  if (!window.fetchHook) {
+    window.fetchHook = newFetch;
   }
-  if (!(window as any).uploadHook) {
-    (window as any).uploadHook = newUpload;
+  if (!window.uploadHook) {
+    window.uploadHook = newUpload;
   }
 }
 
