@@ -1,0 +1,7 @@
+{
+  "extends": "../../buildtools/tsconfig-base-ext.json",
+  "include": ["**/*"],
+  "references": [
+    { "path": "../../test" }
+  ]
+}

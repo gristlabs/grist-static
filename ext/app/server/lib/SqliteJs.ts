@@ -49,6 +49,37 @@ let mainDB: SqlJs.Database|null;
  */
 export const virtualFileSystem: Map<string, Uint8Array> = new Map();
 
+/** Live snapshot of the open main DB. Used by the pagehide snapshot
+ *  path in CommStub to persist state across navigations via
+ *  sessionStorage. Re-registers grist_marshal because export() is
+ *  destructive (see registerGristMarshal). */
+export function exportMainDb(): Uint8Array | null {
+  if (!mainDB) { return null; }
+  const bytes = mainDB.export();
+  registerGristMarshal(mainDB);
+  return bytes;
+}
+
+/** sql.js's Database.export() is destructive: it sqlite3_close_v2s
+ *  the DB, reads the file out, and sqlite3_opens a fresh handle. That
+ *  drops all user-defined functions and frees every cached statement.
+ *  Anywhere we call .export() on a DB the doc continues to use, we
+ *  have to re-register grist_marshal — otherwise the next
+ *  allMarshalQuery (`select grist_marshal(...)`) fails with "no such
+ *  function" and the caller dereferences an empty result. */
+function registerGristMarshal(db: SqlJs.Database) {
+  (db as any).create_aggregate('grist_marshal', {
+    init: gristMarshal.initialize,
+    step: {
+      length: 0,
+      apply: (_: any, args: any[]) => {
+        return gristMarshal.step(args[0], ...args.slice(1));
+      },
+    },
+    finalize: gristMarshal.finalize,
+  });
+}
+
 export class JsDatabase implements MinDB {
   private db: Promise<SqlJs.Database>;
   constructor(public path: string, mode: any, cb: (err: any, v?: any) => void) {
@@ -66,6 +97,11 @@ export class JsDatabase implements MinDB {
               seed = virtualFileSystem.get('copy')!;
             } else if (mainDB) {
               seed = mainDB.export();
+              // mainDB.export() is destructive — see registerGristMarshal's
+              // doc comment. Re-register so subsequent queries on mainDB
+              // (which the doc continues to use after this copy is made)
+              // still find grist_marshal.
+              registerGristMarshal(mainDB);
             }
           }
           if (seedFile && seedFile instanceof Uint8Array) {
@@ -90,16 +126,7 @@ export class JsDatabase implements MinDB {
           if (path !== ':memory:' && path !== 'copy') {
             mainDB = db;
           }
-          (db as any).create_aggregate('grist_marshal', {
-            init: gristMarshal.initialize,
-            step: {
-              length: 0,
-              apply: (_: any, args: any[]) => {
-                return gristMarshal.step(args[0], ...args.slice(1));
-              },
-            },
-            finalize: gristMarshal.finalize,
-          });
+          registerGristMarshal(db);
           resolve(db);
         } catch (e) {
           reject(e);

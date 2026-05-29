@@ -31,6 +31,14 @@ export interface GristOverrides {
   // A hook to the document's REST API.
   expressApp?: MiniExpress;
 
+  // Opt-in trace ring; the post-mortem hook reads it. No-op when off.
+  trace?: boolean;
+
+  // Test mode only. Snapshot the DB to sessionStorage on pagehide and
+  // restore it on the next load, so refresh keeps in-page edits and
+  // undo. Single-user assumption; don't enable in production.
+  testRefreshPersistence?: boolean;
+
   // Hooks for overriding behavior.
   behaviorOverrides?: {
     getCurrentUser?: () => unknown;
@@ -58,7 +66,7 @@ export const gristOverrides = getGristOverrides();
  * information about what the "back-end" code for that endpoint did.
  */
 export interface MiniExpress {
-  run(options: {method: string, path: string}): Promise<ResponseInfo>;
+  run(options: {method: string, path: string, body?: any}): Promise<ResponseInfo>;
 }
 
 /**

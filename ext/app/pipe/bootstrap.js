@@ -75,7 +75,23 @@ function bootstrapGrist(options) {
   const homeUrl = new URL('.', bootstrapGristLocation).href;
   settings.staticGristOptions = options;
   settings.behaviorOverrides = options.behaviorOverrides;
-  if (seedFile) {
+  if (options.trace) { window.__staticTraceOn = true; }
+  if (options.testRefreshPersistence) { settings.testRefreshPersistence = true; }
+  // Use the pagehide snapshot (if any) as the seed, so refresh keeps
+  // in-page edits. No snapshot key in production: no-op there.
+  let snapBytes;
+  try {
+    const snapKey = options.fakeDocId && 'grist-static-snap-' + options.fakeDocId;
+    const snap = snapKey && window.sessionStorage && sessionStorage.getItem(snapKey);
+    if (snap) {
+      const bin = atob(snap);
+      snapBytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) { snapBytes[i] = bin.charCodeAt(i); }
+    }
+  } catch (_e) { /* sessionStorage unavailable or corrupt; fall back to fetch */ }
+  if (snapBytes) {
+    settings.seedFile = snapBytes;
+  } else if (seedFile) {
     settings.seedFile = (typeof seedFile === 'string') ? new URL(seedFile, bootstrapGristLocation) : seedFile;
   }
   if (options.initialContent) {
@@ -83,7 +99,7 @@ function bootstrapGrist(options) {
   } else if (options.initialData) {
     settings.initialData = options.initialData;
   }
-  const fakeDocId = settings.behaviorOverrides?.getCurrentDocId?.() || "new~tTzg3iGWsXq7Q6hSXGb94j";
+  const fakeDocId = options.fakeDocId || settings.behaviorOverrides?.getCurrentDocId?.() || "new~tTzg3iGWsXq7Q6hSXGb94j";
   const fakeUrl = `https://example.com/o/docs/doc/${fakeDocId}`;
   settings.fakeUrl = fakeUrl;
   settings.fakeDocId = fakeDocId;
@@ -124,7 +140,6 @@ function bootstrapGrist(options) {
 
   const css = [
     "jqueryui/themes/smoothness/jquery-ui.css",
-    "bootstrap/dist/css/bootstrap.min.css",
     "hljs.default.css",
     "bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css",
     "bundle.css",
@@ -133,7 +148,6 @@ function bootstrapGrist(options) {
   const js = [
     "jquery/dist/jquery.min.js",
     "jqueryui/jquery-ui.min.js",
-    "bootstrap/dist/js/bootstrap.min.js",
     "bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js",
     "main.bundle.js"
   ];

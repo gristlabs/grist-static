@@ -21,7 +21,11 @@ self.callExternal = (name, args) => {
 }
 
 async function initPyodide() {
-  const pyodide = await loadPyodide({indexURL: self.urlPrefix + "pyodide/"});
+  const pyodide = await loadPyodide({
+    indexURL: self.urlPrefix + "pyodide/",
+    // JsNull doesn't compare against ints; data engine needs real None.
+    convertNullToNone: true,
+  });
   console.log(pyodide.runPython(`
 import sys
 sys.version
@@ -30,8 +34,8 @@ sys.version
     [...packages, "grist-1.0-py3-none-any.whl"].map(l => self.urlPrefix + "packages/" + l)
   );
   pyodide.runPython(`
-import sys
-sys.path.append('/lib/python3.11/site-packages/grist/')
+import sys, sysconfig
+sys.path.append(sysconfig.get_path('purelib') + '/grist/')
 import main
 import sandbox as sandbox_mod
 import os

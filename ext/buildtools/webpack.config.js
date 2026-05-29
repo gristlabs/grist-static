@@ -10,7 +10,17 @@ const base = require('../../core/buildtools/webpack.config.js');
 
 base.entry = {
   ...base.entry,
-  doc: 'app/server/Doc',
+  // Doc.ts is bundled into main.bundle.js via the import in CommStub.
+  // doc.bundle.js exposes the same exports as window.gristy for any
+  // consumer that wants them directly. Per-entry library so the main
+  // bundle doesn't also try to set window.gristy (no default export).
+  doc: {
+    import: 'app/server/Doc',
+    library: { type: 'window', name: 'gristy', export: 'default' },
+  },
+  // Test-mode harness loaded first by sendAppPage. Source file rather
+  // than inline so it gets tsc/lint and avoids HTML-parser traps.
+  'test-harness': 'app/pipe/testHarness',
 };
 
 base.resolve.modules.push(up);
@@ -29,6 +39,15 @@ base.resolve.alias = {
   'chokidar': 'app/server/lib/emptyStub',
   'app/server/lib/gristSessions': 'app/server/lib/emptyStub',
   '@gristlabs/pidusage': 'app/server/lib/pidUsageStub',
+  'pidusage': 'app/server/lib/pidUsageStub',
+  // archiver pulls in node-only crypto/zlib; only used for server-side
+  // export/zip paths we never run.
+  'archiver': 'app/server/lib/emptyStub',
+  'archiver-utils': 'app/server/lib/emptyStub',
+  'crc32-stream': 'app/server/lib/emptyStub',
+  'compress-commons': 'app/server/lib/emptyStub',
+  'zip-stream': 'app/server/lib/emptyStub',
+  'zlib': 'app/server/lib/emptyStub',
   'child_process': 'app/server/lib/childProcessStub',
   'tmp': 'app/server/lib/tmpStub',
   'app/client/components/Comm': 'app/server/lib/CommStub',
@@ -63,8 +82,31 @@ base.resolve.fallback = {
   "react-native-sqlite-storage": false,
 };
 
-// There's something a little off in source maps in some exceljs
-// dependencies - tell webpack we don't care.
+// Webpack 5 treats `node:foo` imports as "unhandled" instead of going
+// through resolve.fallback. Rewrite them here. webpack itself lives in
+// core/node_modules; resolve explicitly via core's tree.
+const webpack = require(path.join(process.cwd(), 'node_modules', 'webpack'));
+base.plugins = base.plugins || [];
+// stream and crypto need real polyfills (Transform etc.); everything
+// else can no-op since it's server-side code only.
+base.plugins.push(new webpack.NormalModuleReplacementPlugin(
+  /^node:stream$/,
+  (resource) => { resource.request = 'stream-browserify'; },
+));
+base.plugins.push(new webpack.NormalModuleReplacementPlugin(
+  /^node:crypto$/,
+  (resource) => { resource.request = 'crypto-browserify'; },
+));
+base.plugins.push(new webpack.NormalModuleReplacementPlugin(
+  /^node:async_hooks$/,
+  (resource) => { resource.request = 'app/server/lib/asyncHooksStub'; },
+));
+base.plugins.push(new webpack.NormalModuleReplacementPlugin(
+  /^node:/,
+  (resource) => { resource.request = 'app/server/lib/emptyStub'; },
+));
+
+// Source maps are off in some exceljs deps; mute the warning.
 const sourceMapLoader = base.module.rules[1];
 if (sourceMapLoader.use[0] !== 'source-map-loader') {
   throw new Error('cannot find source map loader');
@@ -84,11 +126,6 @@ const webworker = {
   },
 };
 
-base.output = {
-  ...base.output,
-  library: 'gristy',
-  libraryTarget: 'window',
-  libraryExport: 'default',
-};
+// (Per-entry library is set on the `doc` entry above.)
 
 module.exports = [base, webworker];
