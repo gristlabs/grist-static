@@ -116,6 +116,11 @@ function bootstrapGrist(options) {
     "supportAnon": false,
     "supportEngines": null,
     "hideUiElements": ["helpCenter", "billing", "templates", "multiSite", "multiAccounts"],
+    // Enable theming so embedded docs follow the OS dark-mode preference.
+    // gristThemeObs() short-circuits to the light theme unless "themes" is
+    // an enabled feature; with no user prefs in static mode it then falls
+    // back to prefers-color-scheme.
+    "features": ["themes"],
     "pageTitleSuffix": null,
     "pluginUrl": "http://plugins.invalid",
     "stripeAPIKey": null,
@@ -159,6 +164,19 @@ function bootstrapGrist(options) {
     asset.async = false;
     asset.setAttribute('href', prefix + src);
     document.body.appendChild(asset);
+  }
+
+  // Embedded grist-static has no real sign-in and no multiple sites, so hide the
+  // Sign in / Sign up buttons and the org/site picker. Skip this when the host
+  // supplies its own account integration (e.g. Puter, via
+  // behaviorOverrides.getCurrentUser) so that integration's account UI stays intact.
+  // (In the element-embedded path behaviorOverrides is JSON-serialized and its
+  // functions are dropped, which is fine: such embeds are anonymous and want this.)
+  if (!options.behaviorOverrides?.getCurrentUser) {
+    const hideStyle = document.createElement('style');
+    hideStyle.textContent =
+      '.test-user-sign-in, .test-user-sign-up, .test-dm-org { display: none !important; }';
+    (document.head || document.body).appendChild(hideStyle);
   }
 
   for (const src of js) {

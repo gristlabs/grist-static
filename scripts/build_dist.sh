@@ -17,8 +17,10 @@ for f in $(cd page; ls *.grist *.csv *.html *.js); do
 done
 ./scripts/link_page_resources.sh link
 
-# Remove some unnecessary symlinks that will make s3 syncs fail.
-rm -f dist/mocha.js dist/mocha.css
+# Remove dangling symlinks before packaging. dist/mocha.js, dist/mocha.css and
+# dist/bootstrap all point into node_modules packages that aren't installed
+# here, so they dangle; aws s3 sync follows symlinks and aborts on broken ones.
+find dist -xtype l -delete
 
 # Remove some duplicates of sql.js not used in front-end.
 rm -rf dist/static/sql.js/dist/
