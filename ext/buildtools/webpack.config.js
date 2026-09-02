@@ -25,6 +25,17 @@ base.entry = {
 
 base.resolve.modules.push(up);
 
+// core's webpack resolve.modules is a list of absolute directories, which
+// turns off node's walk-up: a nested node_modules is invisible. The hoisted
+// readable-stream is 2.x, from the crypto-browserify chain. Two of
+// stream-browserify's requires, lib/internal/streams/end-of-stream.js and
+// pipeline.js, don't exist there, so they fall through to this entry, which
+// holds its own nested 3.x. The other five still get 2.x. The mix is only
+// ever built, not run: the one caller is requestUtils' reverse proxy, which
+// needs stream's pipeline since a recent core, and is unreachable here.
+base.resolve.modules.push(
+  path.join(path.dirname(require.resolve('stream-browserify/package.json')), 'node_modules'));
+
 base.resolve.alias = {
   ...base.resolve.alias,
   'app/server/lib/GoogleImport': 'app/server/lib/GoogleImportStub',
@@ -48,6 +59,10 @@ base.resolve.alias = {
   'compress-commons': 'app/server/lib/emptyStub',
   'zip-stream': 'app/server/lib/emptyStub',
   'zlib': 'app/server/lib/emptyStub',
+  // Imported by Authorizer. Its module body reads
+  // http.ServerResponse.prototype, and http is false here, so loading it
+  // throws. emptyStub is callable, so the call site becomes a no-op.
+  'on-headers': 'app/server/lib/emptyStub',
   'child_process': 'app/server/lib/childProcessStub',
   'tmp': 'app/server/lib/tmpStub',
   'app/client/components/Comm': 'app/server/lib/CommStub',
@@ -97,13 +112,17 @@ base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:crypto$/,
   (resource) => { resource.request = 'crypto-browserify'; },
 ));
+// Absolute, extension included: ESM callers such as file-type resolve
+// fullySpecified, where a bare 'app/server/lib/...' would get no extension
+// guessed for it and miss.
+const stub = (name) => path.resolve(__dirname, '../app/server/lib/', name);
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:async_hooks$/,
-  (resource) => { resource.request = 'app/server/lib/asyncHooksStub'; },
+  (resource) => { resource.request = stub('asyncHooksStub.ts'); },
 ));
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:/,
-  (resource) => { resource.request = 'app/server/lib/emptyStub'; },
+  (resource) => { resource.request = stub('emptyStub.ts'); },
 ));
 
 // Source maps are off in some exceljs deps; mute the warning.

@@ -8,8 +8,8 @@ default:
 
 requirements:
 	cd ext && yarn install --frozen-lockfile --modules-folder=../node_modules
-	cd core && yarn install --frozen-lockfile
-	cd core && test -e ext && echo ext present || ln -s ../ext ext
+	cd core && GRIST_SKIP_EXT_AUTOSETUP=1 yarn install --frozen-lockfile
+	cd core && rm -rf ext _build/ext && ln -s ../ext ext
 	cd core && yarn run install:python
 	cd core/sandbox/pyodide && make setup
 	cd core/sandbox && ./bundle_as_wheel.sh && cp dist/*.whl pyodide/_build/packages/
