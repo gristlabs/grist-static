@@ -4,7 +4,7 @@ import {gristOverrides, MiniExpress, ResponseInfo} from 'app/pipe/GristOverrides
 import {ActiveDoc, Deps as ActiveDocDeps} from 'app/server/lib/ActiveDoc';
 import {makeExceptionalDocSession, makeOptDocSession} from 'app/server/lib/DocSession';
 import {Comm} from 'app/server/lib/Comm';
-import {create} from 'app/server/lib/create';
+import {getCreate} from 'app/server/lib/create';
 import {addDocApiRoutes} from 'app/server/lib/DocApi';
 import {DocManager} from 'app/server/lib/DocManager';
 import {DocStorage} from 'app/server/lib/DocStorage';
@@ -289,7 +289,9 @@ const backend = {
   ActiveDoc,
   DocManager,
   NSandbox,
-  create,
+  // Lazy, to match core's getCreate() contract: the ICreate is built on
+  // first use rather than at module load.
+  get create() { return getCreate(); },
   makeApp,
   makeExceptionalDocSession,
   makeOptDocSession,

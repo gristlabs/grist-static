@@ -144,7 +144,7 @@ function bootstrapGrist(options) {
   };
 
   const css = [
-    "jqueryui/themes/smoothness/jquery-ui.css",
+    "jquery-ui/dist/themes/smoothness/jquery-ui.css",
     "hljs.default.css",
     "bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css",
     "bundle.css",
@@ -152,7 +152,7 @@ function bootstrapGrist(options) {
   ];
   const js = [
     "jquery/dist/jquery.min.js",
-    "jqueryui/jquery-ui.min.js",
+    "jquery-ui/dist/jquery-ui.min.js",
     "bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js",
     "main.bundle.js"
   ];

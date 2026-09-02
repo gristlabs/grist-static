@@ -19,7 +19,9 @@ function transfer {
 }
 
 cd core/static
-rm -rf bootstrap-datepicker jquery jqueryui hljs.default.css
+# jqueryui is the pre-#2476 name; keep clearing it so an older checkout
+# doesn't leave a symlink dangling at the departed components-jqueryui.
+rm -rf bootstrap-datepicker jquery jquery-ui jqueryui hljs.default.css
 rm -rf static node_modules pipe
 cd ../..
 
@@ -30,7 +32,7 @@ transfer ./ ../core/static static
 cd static
 transfer ../../core/static/ ../node_modules/bootstrap-datepicker bootstrap-datepicker
 transfer ../../core/static/ ../node_modules/jquery jquery
-transfer ../../core/static/ ../node_modules/components-jqueryui jqueryui
+transfer ../../core/static/ ../node_modules/jquery-ui jquery-ui
 transfer ../../core/static/ ../node_modules/highlight.js/styles/default.css hljs.default.css
 
 # For some reason, it is hard to pin down where
