@@ -25,13 +25,6 @@ base.entry = {
 
 base.resolve.modules.push(up);
 
-// The hoisted readable-stream is 2.x, but two of stream-browserify's requires
-// (end-of-stream.js and pipeline.js) exist only in 3.x. resolve.modules turns
-// off node's walk-up, so add stream-browserify's own node_modules as a last
-// resort, where just those two find the nested 3.x.
-base.resolve.modules.push(
-  path.join(path.dirname(require.resolve('stream-browserify/package.json')), 'node_modules'));
-
 base.resolve.alias = {
   ...base.resolve.alias,
   'app/server/lib/GoogleImport': 'app/server/lib/GoogleImportStub',
@@ -74,7 +67,10 @@ base.resolve.alias = {
 base.resolve.fallback = {
   ...base.resolve.fallback,
   "crypto": require.resolve("crypto-browserify"), // because ActionHash
-  "stream": require.resolve("stream-browserify"), // ditto
+  // Ditto. readable-stream polyfills stream by itself, and unlike
+  // stream-browserify it ships pipeline and finished. Absolute, since core's
+  // node_modules comes first in resolve.modules and holds a 2.x copy.
+  "stream": require.resolve("readable-stream"),
   "vm": false, //require.resolve("vm-browserify"),
   "net": false,
   "fs": false,
@@ -101,7 +97,7 @@ base.plugins = base.plugins || [];
 // else can no-op since it's server-side code only.
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:stream$/,
-  (resource) => { resource.request = 'stream-browserify'; },
+  (resource) => { resource.request = require.resolve('readable-stream'); },
 ));
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:crypto$/,
