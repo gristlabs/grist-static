@@ -18,7 +18,7 @@ requirements:
 
 update-lock:
 	cd ext && yarn install --modules-folder=../node_modules
-	cd core && yarn install
+	cd core && GRIST_SKIP_EXT_AUTOSETUP=1 yarn install
 
 build:
 	cd core && yarn run build:prod

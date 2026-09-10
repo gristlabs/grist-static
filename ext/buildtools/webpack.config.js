@@ -25,14 +25,10 @@ base.entry = {
 
 base.resolve.modules.push(up);
 
-// core's webpack resolve.modules is a list of absolute directories, which
-// turns off node's walk-up: a nested node_modules is invisible. The hoisted
-// readable-stream is 2.x, from the crypto-browserify chain. Two of
-// stream-browserify's requires, lib/internal/streams/end-of-stream.js and
-// pipeline.js, don't exist there, so they fall through to this entry, which
-// holds its own nested 3.x. The other five still get 2.x. The mix is only
-// ever built, not run: the one caller is requestUtils' reverse proxy, which
-// needs stream's pipeline since a recent core, and is unreachable here.
+// The hoisted readable-stream is 2.x, but two of stream-browserify's requires
+// (end-of-stream.js and pipeline.js) exist only in 3.x. resolve.modules turns
+// off node's walk-up, so add stream-browserify's own node_modules as a last
+// resort, where just those two find the nested 3.x.
 base.resolve.modules.push(
   path.join(path.dirname(require.resolve('stream-browserify/package.json')), 'node_modules'));
 
@@ -59,9 +55,8 @@ base.resolve.alias = {
   'compress-commons': 'app/server/lib/emptyStub',
   'zip-stream': 'app/server/lib/emptyStub',
   'zlib': 'app/server/lib/emptyStub',
-  // Imported by Authorizer. Its module body reads
-  // http.ServerResponse.prototype, and http is false here, so loading it
-  // throws. emptyStub is callable, so the call site becomes a no-op.
+  // Reads http.ServerResponse at load time, but http is false here. emptyStub
+  // is callable, so Authorizer's call site becomes a no-op.
   'on-headers': 'app/server/lib/emptyStub',
   'child_process': 'app/server/lib/childProcessStub',
   'tmp': 'app/server/lib/tmpStub',
