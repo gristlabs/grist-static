@@ -96,4 +96,12 @@ class StaticCreate extends BaseCreate {
   }
 }
 
-export const create: ICreate = new StaticCreate();
+let create: ICreate | undefined;
+
+/**
+ * Mirrors core's stubs/app/server/lib/create.ts: construction is deferred to
+ * first use so every build resolves its ICreate at the same point in startup.
+ */
+export function getCreate(): ICreate {
+  return create ??= new StaticCreate();
+}

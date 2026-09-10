@@ -30,7 +30,7 @@ const STATIC_DOC_HTML = `<!doctype html>
 
 <link rel="icon" type="image/x-icon" href="icons/favicon.png" />
 
-<link rel="stylesheet" href="jqueryui/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="jquery-ui/dist/themes/smoothness/jquery-ui.css">
 <link rel="stylesheet" href="hljs.default.css">
 <link rel="stylesheet" href="bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css">
 <link rel="stylesheet" href="bundle.css">
@@ -67,7 +67,7 @@ const STATIC_DOC_HTML = `<!doctype html>
   <!-- Test harness loads first so it captures errors from later scripts. -->
   <script src="test-harness.bundle.js" crossorigin="anonymous"></script>
   <script src="jquery/dist/jquery.min.js" crossorigin="anonymous"></script>
-  <script src="jqueryui/jquery-ui.min.js" crossorigin="anonymous"></script>
+  <script src="jquery-ui/dist/jquery-ui.min.js" crossorigin="anonymous"></script>
   <script src="bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js" crossorigin="anonymous"></script>
   <script>
   (function () {

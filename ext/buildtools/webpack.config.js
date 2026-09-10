@@ -48,6 +48,9 @@ base.resolve.alias = {
   'compress-commons': 'app/server/lib/emptyStub',
   'zip-stream': 'app/server/lib/emptyStub',
   'zlib': 'app/server/lib/emptyStub',
+  // Reads http.ServerResponse at load time, but http is false here. emptyStub
+  // is callable, so Authorizer's call site becomes a no-op.
+  'on-headers': 'app/server/lib/emptyStub',
   'child_process': 'app/server/lib/childProcessStub',
   'tmp': 'app/server/lib/tmpStub',
   'app/client/components/Comm': 'app/server/lib/CommStub',
@@ -64,7 +67,10 @@ base.resolve.alias = {
 base.resolve.fallback = {
   ...base.resolve.fallback,
   "crypto": require.resolve("crypto-browserify"), // because ActionHash
-  "stream": require.resolve("stream-browserify"), // ditto
+  // Ditto. readable-stream polyfills stream by itself, and unlike
+  // stream-browserify it ships pipeline and finished. Absolute, since core's
+  // node_modules comes first in resolve.modules and holds a 2.x copy.
+  "stream": require.resolve("readable-stream"),
   "vm": false, //require.resolve("vm-browserify"),
   "net": false,
   "fs": false,
@@ -91,19 +97,23 @@ base.plugins = base.plugins || [];
 // else can no-op since it's server-side code only.
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:stream$/,
-  (resource) => { resource.request = 'stream-browserify'; },
+  (resource) => { resource.request = require.resolve('readable-stream'); },
 ));
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:crypto$/,
   (resource) => { resource.request = 'crypto-browserify'; },
 ));
+// Absolute, extension included: ESM callers such as file-type resolve
+// fullySpecified, where a bare 'app/server/lib/...' would get no extension
+// guessed for it and miss.
+const stub = (name) => path.resolve(__dirname, '../app/server/lib/', name);
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:async_hooks$/,
-  (resource) => { resource.request = 'app/server/lib/asyncHooksStub'; },
+  (resource) => { resource.request = stub('asyncHooksStub.ts'); },
 ));
 base.plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^node:/,
-  (resource) => { resource.request = 'app/server/lib/emptyStub'; },
+  (resource) => { resource.request = stub('emptyStub.ts'); },
 ));
 
 // Source maps are off in some exceljs deps; mute the warning.

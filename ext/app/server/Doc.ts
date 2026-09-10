@@ -4,7 +4,6 @@ import {gristOverrides, MiniExpress, ResponseInfo} from 'app/pipe/GristOverrides
 import {ActiveDoc, Deps as ActiveDocDeps} from 'app/server/lib/ActiveDoc';
 import {makeExceptionalDocSession, makeOptDocSession} from 'app/server/lib/DocSession';
 import {Comm} from 'app/server/lib/Comm';
-import {create} from 'app/server/lib/create';
 import {addDocApiRoutes} from 'app/server/lib/DocApi';
 import {DocManager} from 'app/server/lib/DocManager';
 import {DocStorage} from 'app/server/lib/DocStorage';
@@ -289,7 +288,6 @@ const backend = {
   ActiveDoc,
   DocManager,
   NSandbox,
-  create,
   makeApp,
   makeExceptionalDocSession,
   makeOptDocSession,

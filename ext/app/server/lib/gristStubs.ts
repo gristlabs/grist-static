@@ -4,8 +4,8 @@
 // not a function" at runtime; the fix lives here.
 
 import {gristOverrides} from 'app/pipe/GristOverrides';
+import {getCreate} from 'app/server/lib/create';
 import {createDummyGristServer, createDummyTelemetry} from 'app/server/lib/GristServer';
-import gristy from 'app/server/Doc';
 
 // FullUser literal used in-process: authSession.fullUser,
 // authorizer.getUser(), client.getProfile(), and the default for
@@ -94,7 +94,7 @@ export function makeAnonDocInfo({name, id}: {name: string, id: string}) {
 export function makeStubGristServer() {
   return {
     ...createDummyGristServer(),
-    create: gristy.create,
+    create: getCreate(),
     getTelemetry: () => createDummyTelemetry(),
     getDocNotificationManager: () => undefined,
     getInstallAdmin: makeStubInstallAdmin,
